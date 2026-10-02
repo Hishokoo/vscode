@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>上機參考：模型評比、可調參數與量化指標總表</title>
+<style>
+  :root{
+    --bg:#fbfaf8; --panel:#ffffff; --surface-1:#fcfcfb;
+    --ink:#0b0b0b; --ink-2:#52514e; --muted:#83817b;
+    --line:#e3e0da; --accent:#b4540a; --accent-soft:#fdf1e7;
+    --code-bg:#f3f1ec;
+    --series-1:#2a78d6; --series-2:#eb6834;
+    --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#d03b3b;
+    --good-soft:#eaf6ea; --crit-soft:#fbeaea; --warn-soft:#fdf5e3;
+    --grid:#e8e5df; --ref:#a9a69f;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#141414; --panel:#1f1f1e; --surface-1:#1a1a19;
+      --ink:#ffffff; --ink-2:#c3c2b7; --muted:#918f87;
+      --line:#34332f; --accent:#f0924a; --accent-soft:#2a211c;
+      --code-bg:#262624;
+      --series-1:#3987e5; --series-2:#d95926;
+      --good-soft:#16261a; --crit-soft:#2c1a1a; --warn-soft:#2a2418;
+      --grid:#2e2e2b; --ref:#6a6862;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#141414; --panel:#1f1f1e; --surface-1:#1a1a19;
+    --ink:#ffffff; --ink-2:#c3c2b7; --muted:#918f87;
+    --line:#34332f; --accent:#f0924a; --accent-soft:#2a211c;
+    --code-bg:#262624;
+    --series-1:#3987e5; --series-2:#d95926;
+    --good-soft:#16261a; --crit-soft:#2c1a1a; --warn-soft:#2a2418;
+    --grid:#2e2e2b; --ref:#6a6862;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);line-height:1.72;font-size:16px;
+    font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","PingFang TC",Segoe UI,sans-serif}
+  .wrap{max-width:1200px;margin:0 auto;padding:44px 22px 90px}
+  header{border-bottom:2px solid var(--ink);padding-bottom:18px;margin-bottom:12px}
+  h1{font-size:29px;margin:0 0 6px;letter-spacing:-.01em}
+  .sub{color:var(--muted);font-size:14.5px;margin:0}
+  h2{font-size:21px;margin:54px 0 14px;padding-top:20px;border-top:1px solid var(--line)}
+  h3{font-size:16px;margin:26px 0 8px;color:var(--accent)}
+  h4{font-size:14.5px;margin:20px 0 6px;color:var(--ink-2);text-transform:none}
+  p{margin:0 0 13px}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.85em;
+    background:var(--code-bg);padding:1px 5px;border-radius:4px}
+  .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:16px 0}
+  table{border-collapse:collapse;width:100%;min-width:720px;font-size:13.5px;background:var(--panel)}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  thead th{background:var(--accent-soft);font-weight:600;white-space:nowrap}
+  tbody th{background:var(--code-bg);font-weight:600;white-space:nowrap}
+  td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  tr.hl td,tr.hl th{background:var(--good-soft)}
+  tr.bad td,tr.bad th{background:var(--crit-soft)}
+  .chip{display:inline-block;font-size:12px;padding:1px 8px;border-radius:99px;
+    border:1px solid currentColor;white-space:nowrap;font-weight:600}
+  .c-good{color:var(--good)} .c-crit{color:var(--critical)}
+  .c-warn{color:var(--serious)} .c-mut{color:var(--muted);font-weight:400}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;
+    padding:16px 20px;margin:16px 0}
+  .card>:first-child{margin-top:0} .card>:last-child{margin-bottom:0}
+  .verdict{border-left:4px solid var(--good);background:var(--good-soft)}
+  .warn{border-left:4px solid var(--critical);background:var(--crit-soft)}
+  .note{border-left:4px solid var(--warning);background:var(--warn-soft)}
+  ul,ol{margin:0 0 13px;padding-left:22px} li{margin-bottom:5px}
+  .hero{display:flex;flex-wrap:wrap;gap:14px;margin:20px 0}
+  .tile{flex:1 1 160px;min-width:160px;background:var(--panel);border:1px solid var(--line);
+    border-radius:8px;padding:14px 16px}
+  .tile .k{font-size:12.5px;color:var(--muted);display:block;margin-bottom:2px}
+  .tile .v{font-size:25px;font-weight:650;letter-spacing:-.02em;font-variant-numeric:tabular-nums;
+    display:block;line-height:1.25}
+  .tile .n{font-size:12.5px;color:var(--ink-2);display:block;margin-top:2px}
+  figure{margin:24px 0;background:var(--surface-1);border:1px solid var(--line);
+    border-radius:8px;padding:16px 18px 10px}
+  figcaption{font-size:13px;color:var(--ink-2);margin-top:8px;line-height:1.6}
+  figure .ttl{font-size:15px;font-weight:600;margin-bottom:2px}
+  figure .dek{font-size:12.5px;color:var(--muted);margin-bottom:12px}
+  svg{display:block;width:100%;height:auto;overflow:visible}
+  .grid{stroke:var(--grid);stroke-width:1}
+  .ref{stroke:var(--ref);stroke-width:1.5;stroke-dasharray:5 4}
+  .reflbl{font-size:11px;fill:var(--muted);text-anchor:end}
+  .ax{font-size:11.5px;fill:var(--ink-2)} .ar{text-anchor:end} .ac{text-anchor:middle}
+  .vlbl{font-size:11px;fill:var(--ink-2);font-variant-numeric:tabular-nums}
+  .lbl{font-size:12.5px;font-weight:600}
+  .bar.s1{fill:var(--series-1)} .bar.s2{fill:var(--series-2)}
+  .ln{fill:none;stroke-width:2} .ln.s1{stroke:var(--series-1)} .ln.s2{stroke:var(--series-2)}
+  .dot{stroke:var(--surface-1);stroke-width:2}
+  .dot.s1{fill:var(--series-1)} .dot.s2{fill:var(--series-2)}
+  .lbl.s1{fill:var(--series-1)} .lbl.s2{fill:var(--series-2)}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--ink-2);margin-bottom:6px}
+  .legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;
+    vertical-align:baseline}
+  footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);
+    color:var(--muted);font-size:13px}
+  .toc{font-size:14px;color:var(--ink-2);margin:18px 0 0}
+  .toc a{color:var(--accent);text-decoration:none;margin-right:16px;white-space:nowrap;
+    display:inline-block}
+  .toc a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>上機參考手冊</h1>
+  <p class="sub">TD3 倒立擺 · 模型效能評比、全部可調參數、量化指標定義、模擬→實體規格轉換</p>
+</header>
+<p class="toc">
+  <a href="#s1">1 最佳模型</a><a href="#s2">2 壓力測試證據</a><a href="#s3">3 訓練期指標</a>
+  <a href="#s4">4 自動迴圈軌跡</a><a href="#s5">5 可調參數全表</a><a href="#s6">6 量化指標定義</a>
+  <a href="#s7">7 上機規格轉換</a><a href="#s8">8 上機前必補</a>
+</p>
+
+<!-- ============ 1 ============ -->
+<h2 id="s1">1. 結論：哪一個最好</h2>
+
+<div class="card verdict">
+  <h3 style="color:var(--good);margin-top:0">05114 是目前唯一有硬證據支撐的最佳模型</h3>
+  <p>05113 與 05114 跑過<b>同一套壓力測試</b>，可直接對比。05114 在關鍵項目上勝出，其餘持平：</p>
+  <ul>
+    <li><b>delay=2 存活 998 → 1874 步</b>（+88%）。這是 Domain Randomization 的直接回報，也是 05114 存在的理由。</li>
+    <li><b>擾動恢復速度快一倍</b>：同樣的 0.5 rad/s 衝量，05113 要 30 步恢復，05114 只要 16 步（0.64 秒）。</li>
+    <li>質量容忍（70–130%）、delay=1 存活兩者相同，都全數通過。</li>
+    <li>唯一小輸：極端衝量尾段（2.5 rad/s）05113 有 8% 恢復率、05114 是 0% — 但兩者都已失效，這個差距沒有工程意義。</li>
+  </ul>
+</div>
+
+<div class="hero">
+  <div class="tile"><span class="k">最佳模型</span><span class="v">05114</span><span class="n">rl_project/05114.zip</span></div>
+  <div class="tile"><span class="k">延遲容忍上限</span><span class="v">2 步</span><span class="n">= 80 ms @ 25 Hz</span></div>
+  <div class="tile"><span class="k">衝量容忍（90%恢復）</span><span class="v">0.5 <span style="font-size:15px">rad/s</span></span><span class="n">1.5 rad/s 僅 44%</span></div>
+  <div class="tile"><span class="k">質量容忍</span><span class="v">±30%</span><span class="n">70–130% 全通過</span></div>
+  <div class="tile"><span class="k">恢復時間</span><span class="v">0.64 <span style="font-size:15px">s</span></span><span class="n">16 步 @ 0.5 rad/s</span></div>
+</div>
+
+<h3>次佳與落選</h3>
+<div class="scroll">
+<table>
+  <thead><tr><th>模型</th><th>判定</th><th>理由</th></tr></thead>
+  <tbody>
+    <tr class="hl"><td><b>05114</b></td><td><span class="chip c-good">上機首選</span></td>
+      <td>唯一通過完整壓力測試且 delay=2 穩固。有量化邊界可寫進規格書。</td></tr>
+    <tr><td><b>06120</b></td><td><span class="chip c-warn">待驗證</span></td>
+      <td>訓練期 ep_len_mean 1171/2000（58.5%）優於 05114 的 779/2000（39%），<b>但訓練環境較寬鬆</b>（delay=2 機率 30% vs 50%、擾動機率 20% vs 30%），且<b>從未跑過壓力測試</b>。不能宣稱比 05114 好。</td></tr>
+    <tr><td><b>05113</b></td><td><span class="chip c-mut">退居備援</span></td>
+      <td>delay=1 表現與 05114 相同，但 delay=2 只有一半存活率（998 步且標準差 970，呈雙峰＝半數直接失敗）。</td></tr>
+    <tr><td><b>05112</b></td><td><span class="chip c-mut">不可上機</span></td>
+      <td>ep_len 930/1000 看似最漂亮，但訓練環境<b>沒有初始擾動、沒有外力、delay 固定 1</b>。這是「考古題滿分」，不是強健性。</td></tr>
+    <tr class="bad"><td><b>05111</b></td><td><span class="chip c-crit">落選</span></td>
+      <td>基線版，ep_len 343/1000，位置懲罰過低導致車體飄移。</td></tr>
+    <tr class="bad"><td><b>06111</b></td><td><span class="chip c-crit">失敗</span></td>
+      <td>純 delay=2 硬訓把 05113 的能力打掉了：ep_len_mean 僅 <b>13.2 步</b>。課程學習 Stage 1 實際上是災難性遺忘，後面 9 輪都在修這個洞。</td></tr>
+    <tr><td><b>05121</b></td><td><span class="chip c-mut">評估工具</span></td>
+      <td>不是模型。但它本身有兩個 bug，見第 8 節。</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="card note">
+  <p style="margin:0"><b>要不要改用 06120？</b>值得測，但必須先把 05121 壓力測試指向 06120 跑一次。若 06120 在 delay=2 的存活數與衝量恢復率都贏過 05114，就換它上機；否則維持 05114。這是目前最有價值的一次實驗，成本約一次 05121 的執行時間。</p>
+</div>
+
+<!-- ============ 2 ============ -->
+<h2 id="s2">2. 壓力測試證據（05113 vs 05114）</h2>
+
+<figure>
+  <div class="ttl">延遲容忍：2 步是懸崖，不是斜坡</div>
+  <div class="dek">每格 50 集、每集上限 2000 步 · 通過線 1900 步</div>
+  <div class="legend">
+    <span><i style="background:var(--series-1)"></i>05113</span>
+    <span><i style="background:var(--series-2)"></i>05114</span>
+  </div>
+  <svg viewBox="0 0 720 300" role="img" aria-label="延遲掃描：delay 1-2 存活接近 2000 步，delay 3 以後全數崩潰至 30 步以下">
+<line class="grid" x1="52" y1="260.0" x2="704" y2="260.0"/>
+<text class="ax ar" x="44" y="264.0">0</text>
+<line class="grid" x1="52" y1="199.0" x2="704" y2="199.0"/>
+<text class="ax ar" x="44" y="203.0">500</text>
+<line class="grid" x1="52" y1="138.0" x2="704" y2="138.0"/>
+<text class="ax ar" x="44" y="142.0">1000</text>
+<line class="grid" x1="52" y1="77.0" x2="704" y2="77.0"/>
+<text class="ax ar" x="44" y="81.0">1500</text>
+<line class="grid" x1="52" y1="16.0" x2="704" y2="16.0"/>
+<text class="ax ar" x="44" y="20.0">2000</text>
+<rect class="bar s1" x="55.0" y="25.8" width="27.6" height="234.2" rx="3"><title>05113 · delay=1 · 平均存活 1920 步</title></rect>
+<rect class="bar s2" x="84.6" y="20.9" width="27.6" height="239.1" rx="3"><title>05114 · delay=1 · 平均存活 1960 步</title></rect>
+<rect class="bar s1" x="120.2" y="138.2" width="27.6" height="121.8" rx="3"><title>05113 · delay=2 · 平均存活 998 步</title></rect>
+<rect class="bar s2" x="149.8" y="31.4" width="27.6" height="228.6" rx="3"><title>05114 · delay=2 · 平均存活 1874 步</title></rect>
+<rect class="bar s1" x="185.4" y="258.4" width="27.6" height="1.6" rx="3"><title>05113 · delay=3 · 平均存活 13 步</title></rect>
+<rect class="bar s2" x="215.0" y="256.4" width="27.6" height="3.6" rx="3"><title>05114 · delay=3 · 平均存活 29 步</title></rect>
+<rect class="bar s1" x="250.6" y="258.5" width="27.6" height="1.5" rx="3"><title>05113 · delay=4 · 平均存活 12 步</title></rect>
+<rect class="bar s2" x="280.2" y="257.9" width="27.6" height="2.1" rx="3"><title>05114 · delay=4 · 平均存活 17 步</title></rect>
+<rect class="bar s1" x="315.8" y="258.4" width="27.6" height="1.6" rx="3"><title>05113 · delay=5 · 平均存活 13 步</title></rect>
+<rect class="bar s2" x="345.4" y="258.4" width="27.6" height="1.6" rx="3"><title>05114 · delay=5 · 平均存活 13 步</title></rect>
+<rect class="bar s1" x="381.0" y="258.4" width="27.6" height="1.6" rx="3"><title>05113 · delay=6 · 平均存活 13 步</title></rect>
+<rect class="bar s2" x="410.6" y="258.5" width="27.6" height="1.5" rx="3"><title>05114 · delay=6 · 平均存活 12 步</title></rect>
+<rect class="bar s1" x="446.2" y="258.5" width="27.6" height="1.5" rx="3"><title>05113 · delay=7 · 平均存活 11 步</title></rect>
+<rect class="bar s2" x="475.8" y="258.5" width="27.6" height="1.5" rx="3"><title>05114 · delay=7 · 平均存活 11 步</title></rect>
+<rect class="bar s1" x="511.4" y="258.5" width="27.6" height="1.5" rx="3"><title>05113 · delay=8 · 平均存活 8 步</title></rect>
+<rect class="bar s2" x="541.0" y="258.5" width="27.6" height="1.5" rx="3"><title>05114 · delay=8 · 平均存活 9 步</title></rect>
+<rect class="bar s1" x="576.6" y="258.5" width="27.6" height="1.5" rx="3"><title>05113 · delay=9 · 平均存活 10 步</title></rect>
+<rect class="bar s2" x="606.2" y="258.5" width="27.6" height="1.5" rx="3"><title>05114 · delay=9 · 平均存活 10 步</title></rect>
+<rect class="bar s1" x="641.8" y="258.5" width="27.6" height="1.5" rx="3"><title>05113 · delay=10 · 平均存活 12 步</title></rect>
+<rect class="bar s2" x="671.4" y="258.5" width="27.6" height="1.5" rx="3"><title>05114 · delay=10 · 平均存活 7 步</title></rect>
+<line class="ref" x1="52" y1="28.2" x2="704" y2="28.2"/>
+<text class="reflbl" x="704" y="24">通過線 1900 步</text>
+<text class="ax ac" x="84.6" y="280">1</text>
+<text class="ax ac" x="149.8" y="280">2</text>
+<text class="ax ac" x="215.0" y="280">3</text>
+<text class="ax ac" x="280.2" y="280">4</text>
+<text class="ax ac" x="345.4" y="280">5</text>
+<text class="ax ac" x="410.6" y="280">6</text>
+<text class="ax ac" x="475.8" y="280">7</text>
+<text class="ax ac" x="541.0" y="280">8</text>
+<text class="ax ac" x="606.2" y="280">9</text>
+<text class="ax ac" x="671.4" y="280">10</text>
+<text class="ax ac" x="378.0" y="296">馬達延遲（控制步數）</text>
+  </svg>
+  <figcaption><b>這張圖是整份報告最重要的一條線。</b>delay=3 之後兩個模型都掉到 30 步以下 — 不是變差，是完全失控。上機時的端到端延遲若超過 2 個控制週期（80 ms），模型會立刻發散，沒有緩衝區。</figcaption>
+</figure>
+
+<figure>
+  <div class="ttl">抗擾動：恢復率隨注入衝量崩塌</div>
+  <div class="dek">於第 500 步注入角速度衝量 · 恢復判定 |角度| &lt; 0.01 rad · 每點 50 集</div>
+  <div class="legend">
+    <span><i style="background:var(--series-1)"></i>05113</span>
+    <span><i style="background:var(--series-2)"></i>05114</span>
+  </div>
+  <svg viewBox="0 0 440 270" role="img" aria-label="恢復率對注入衝量：0.5 rad/s 時約 96-98%，1.5 rad/s 降至 40-44%，2.5 rad/s 以後歸零">
+<line class="grid" x1="46" y1="228.0" x2="350" y2="228.0"/>
+<text class="ax ar" x="38" y="232.0">0%</text>
+<line class="grid" x1="46" y1="175.0" x2="350" y2="175.0"/>
+<text class="ax ar" x="38" y="179.0">25%</text>
+<line class="grid" x1="46" y1="122.0" x2="350" y2="122.0"/>
+<text class="ax ar" x="38" y="126.0">50%</text>
+<line class="grid" x1="46" y1="69.0" x2="350" y2="69.0"/>
+<text class="ax ar" x="38" y="73.0">75%</text>
+<line class="grid" x1="46" y1="16.0" x2="350" y2="16.0"/>
+<text class="ax ar" x="38" y="20.0">100%</text>
+<polyline class="ln s1" points="46.0,20.2 122.0,143.2 198.0,211.0 274.0,228.0 350.0,228.0"/>
+<polyline class="ln s2" points="46.0,24.5 122.0,134.7 198.0,228.0 274.0,228.0 350.0,228.0"/>
+<circle class="dot s1" cx="46.0" cy="20.2" r="5"><title>05113 · 總衝量 0.5 rad/s · 恢復率 98%</title></circle>
+<circle class="dot s1" cx="122.0" cy="143.2" r="5"><title>05113 · 總衝量 1.5 rad/s · 恢復率 40%</title></circle>
+<circle class="dot s1" cx="198.0" cy="211.0" r="5"><title>05113 · 總衝量 2.5 rad/s · 恢復率 8%</title></circle>
+<circle class="dot s1" cx="274.0" cy="228.0" r="5"><title>05113 · 總衝量 3.5 rad/s · 恢復率 0%</title></circle>
+<circle class="dot s1" cx="350.0" cy="228.0" r="5"><title>05113 · 總衝量 4.5 rad/s · 恢復率 0%</title></circle>
+<circle class="dot s2" cx="46.0" cy="24.5" r="5"><title>05114 · 總衝量 0.5 rad/s · 恢復率 96%</title></circle>
+<circle class="dot s2" cx="122.0" cy="134.7" r="5"><title>05114 · 總衝量 1.5 rad/s · 恢復率 44%</title></circle>
+<circle class="dot s2" cx="198.0" cy="228.0" r="5"><title>05114 · 總衝量 2.5 rad/s · 恢復率 0%</title></circle>
+<circle class="dot s2" cx="274.0" cy="228.0" r="5"><title>05114 · 總衝量 3.5 rad/s · 恢復率 0%</title></circle>
+<circle class="dot s2" cx="350.0" cy="228.0" r="5"><title>05114 · 總衝量 4.5 rad/s · 恢復率 0%</title></circle>
+<text class="lbl s1" x="364.0" y="218.0">05113</text>
+<text class="lbl s2" x="364.0" y="242.0">05114</text>
+<text class="ax ac" x="46.0" y="248">0.5</text>
+<text class="ax ac" x="122.0" y="248">1.5</text>
+<text class="ax ac" x="198.0" y="248">2.5</text>
+<text class="ax ac" x="274.0" y="248">3.5</text>
+<text class="ax ac" x="350.0" y="248">4.5</text>
+<text class="ax ac" x="198.0" y="266">注入總衝量（rad/s）</text>
+  </svg>
+  <figcaption>測試四 A（掃時長）與測試四 B（掃力量）其實量的是<b>同一件事</b>：程式在單一步內連續呼叫 <code>set_state</code>，中間不跑物理，所以「時長 × 力量」只是一個瞬時衝量。兩組數據換算成總衝量後完全重合，反而互相驗證了這條曲線。</figcaption>
+</figure>
+
+<h3>壓力測試完整數據</h3>
+<div class="scroll">
+<table>
+  <thead><tr><th>測試</th><th>條件</th><th class="num">05113</th><th class="num">05114</th><th>判讀</th></tr></thead>
+  <tbody>
+    <tr><th rowspan="3">延遲掃描<br>（平均存活步數）</th><td>delay = 1</td><td class="num">1920 ±392</td><td class="num">1960 ±280</td><td>兩者皆通過</td></tr>
+    <tr class="hl"><td>delay = 2</td><td class="num">998 ±970</td><td class="num"><b>1874 ±475</b></td><td><b>05114 決定性勝出</b>；05113 標準差 970 代表結果雙峰，約半數直接失敗</td></tr>
+    <tr class="bad"><td>delay ≥ 3</td><td class="num">8–13</td><td class="num">7–29</td><td>兩者完全失控</td></tr>
+    <tr><th rowspan="3">衝量恢復率</th><td>0.5 rad/s</td><td class="num">98% / 30 步</td><td class="num">96% / <b>16 步</b></td><td>恢復率持平，<b>05114 恢復快一倍</b></td></tr>
+    <tr><td>1.5 rad/s</td><td class="num">40%</td><td class="num">44%</td><td>已經是硬邊界</td></tr>
+    <tr class="bad"><td>≥ 2.5 rad/s</td><td class="num">8% → 0%</td><td class="num">0%</td><td>兩者皆失效</td></tr>
+    <tr><th>質量浮動</th><td>70% – 130%</td><td class="num">1840–2000</td><td class="num">1880–2000</td><td>全數通過，無明顯差異；上機組裝公差有很大餘裕</td></tr>
+    <tr class="bad"><th>初始推力</th><td>0 – 3.0 rad/s</td><td class="num">1800–2000</td><td class="num">1800–2000</td><td><b>此測試無效</b>（程式 bug，見第 8 節），數據不可採信</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ============ 3 ============ -->
+<h2 id="s3">3. 訓練期指標總表（14 次訓練）</h2>
+
+<p>取每次訓練最後 10 筆紀錄的平均。<b>存活率欄位是唯一可跨版本比較的欄位</b>，但仍要配合「訓練環境難度」一起看 — 環境越難、數字越低是正常的。</p>
+
+<div class="scroll">
+<table>
+  <thead><tr>
+    <th>版本</th><th>訓練環境難度</th><th class="num">ep_len</th><th class="num">存活率</th>
+    <th class="num">ep_rew</th><th class="num">critic_loss</th><th class="num">ISE/步</th>
+    <th class="num">穩態誤差</th><th class="num">穩定時間</th><th class="num">RMS 控制力</th><th class="num">超調</th>
+  </tr></thead>
+  <tbody>
+    <tr><td><b>05111</b></td><td>delay 1 固定，無擾動</td><td class="num">342.8</td><td class="num">34.3%</td>
+      <td class="num">220.1</td><td class="num">3.12</td><td class="num">—</td><td class="num">0.0431</td>
+      <td class="num">1.0</td><td class="num">0.528</td><td class="num">0.2098</td></tr>
+    <tr><td><b>05112</b></td><td>delay 1 固定，無擾動</td><td class="num">930.8</td><td class="num">93.1%</td>
+      <td class="num">608.9</td><td class="num">4.64</td><td class="num">0.0031</td><td class="num">0.0428</td>
+      <td class="num">1.0</td><td class="num">0.543</td><td class="num">0.1660</td></tr>
+    <tr><td><b>05113</b></td><td>＋初始擾動 ±0.2 rad</td><td class="num">1034.0</td><td class="num">51.7%</td>
+      <td class="num">650.9</td><td class="num">4.23</td><td class="num">0.0030</td><td class="num">0.0459</td>
+      <td class="num">11.2</td><td class="num">0.547</td><td class="num">0.1776</td></tr>
+    <tr class="hl"><td><b>05114</b></td><td>＋delay 1/2 各半、外擾 30%</td><td class="num">779.4</td><td class="num">39.0%</td>
+      <td class="num">424.0</td><td class="num">7.58</td><td class="num">0.0073</td><td class="num">0.0822</td>
+      <td class="num">16.7</td><td class="num">0.658</td><td class="num">0.2218</td></tr>
+    <tr class="bad"><td><b>06111</b></td><td>delay 2 固定、外擾 30%</td><td class="num">13.2</td><td class="num">0.7%</td>
+      <td class="num">6.6</td><td class="num">4.94</td><td class="num">0.0250</td><td class="num">0.1092</td>
+      <td class="num">5.6</td><td class="num">0.328</td><td class="num">0.2102</td></tr>
+    <tr><td>06112</td><td>delay2 50%、外擾 30%</td><td class="num">34.3</td><td class="num">1.7%</td>
+      <td class="num">18.3</td><td class="num">5.56</td><td class="num">0.0239</td><td class="num">0.0851</td>
+      <td class="num">7.7</td><td class="num">0.327</td><td class="num">0.1993</td></tr>
+    <tr><td>06113</td><td>delay2 45%、外擾 25%</td><td class="num">44.4</td><td class="num">2.2%</td>
+      <td class="num">24.6</td><td class="num">5.73</td><td class="num">0.0134</td><td class="num">0.1354</td>
+      <td class="num">17.3</td><td class="num">0.469</td><td class="num">0.2099</td></tr>
+    <tr><td>06114</td><td>delay2 40%、外擾 25%</td><td class="num">340.0</td><td class="num">17.0%</td>
+      <td class="num">203.8</td><td class="num">7.71</td><td class="num">0.0047</td><td class="num">0.0768</td>
+      <td class="num">14.3</td><td class="num">0.536</td><td class="num">0.2032</td></tr>
+    <tr><td>06115</td><td>delay2 35%、外擾 20%</td><td class="num">904.7</td><td class="num">45.2%</td>
+      <td class="num">529.8</td><td class="num">5.15</td><td class="num">0.0061</td><td class="num">0.0354</td>
+      <td class="num">10.7</td><td class="num">0.480</td><td class="num">0.1832</td></tr>
+    <tr><td>06116</td><td rowspan="5">delay2 30%、外擾 20%<br>（規則 E，參數凍結）</td><td class="num">1081.9</td><td class="num">54.1%</td>
+      <td class="num">643.4</td><td class="num">6.21</td><td class="num">0.0091</td><td class="num">0.0537</td>
+      <td class="num">11.8</td><td class="num">0.562</td><td class="num">0.1888</td></tr>
+    <tr><td>06117</td><td class="num">1153.8</td><td class="num">57.7%</td>
+      <td class="num">581.8</td><td class="num">5.38</td><td class="num">0.0085</td><td class="num">0.0618</td>
+      <td class="num">15.0</td><td class="num">0.551</td><td class="num">0.1912</td></tr>
+    <tr><td>06118</td><td class="num">1142.7</td><td class="num">57.1%</td>
+      <td class="num">649.4</td><td class="num">5.10</td><td class="num">0.0042</td><td class="num">0.0602</td>
+      <td class="num">11.4</td><td class="num">0.623</td><td class="num">0.1876</td></tr>
+    <tr><td><b>06119</b></td><td class="num">1180.1</td><td class="num">59.0%</td>
+      <td class="num">644.3</td><td class="num">3.64</td><td class="num">0.0071</td><td class="num">0.0415</td>
+      <td class="num">11.4</td><td class="num">0.476</td><td class="num">0.1723</td></tr>
+    <tr><td><b>06120</b></td><td class="num">1170.9</td><td class="num">58.5%</td>
+      <td class="num">632.7</td><td class="num">5.24</td><td class="num">0.0080</td><td class="num">0.0621</td>
+      <td class="num">14.2</td><td class="num">0.517</td><td class="num">0.1898</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="card note">
+  <p style="margin:0"><b>ep_rew 不可跨版本比較。</b>05111→05112→05113 的位置懲罰權重從 1.0 改成 3.0 再改成 5.0，獎勵函數本身變了，分數不在同一個尺度上。同理，05112 的 93.1% 存活率之所以最高，是因為它的環境最簡單（無初始擾動、無外力、延遲固定），不是因為它最強。</p>
+</div>
+
+<!-- ============ 4 ============ -->
+<h2 id="s4">4. 自動迴圈軌跡：一次昂貴的繞路</h2>
+
+<figure>
+  <div class="ttl">06111 的災難性遺忘，與後續 9 輪的修復</div>
+  <div class="dek">訓練期 ep_len_mean（上限 2000 步）· 每輪 150K steps</div>
+  <svg viewBox="0 0 720 290" role="img" aria-label="自動迴圈進展：06111 僅 13 步，逐輪回升至 06119 的 1180 步後持平">
+<line class="grid" x1="52" y1="246.0" x2="704" y2="246.0"/>
+<text class="ax ar" x="44" y="250.0">0</text>
+<line class="grid" x1="52" y1="175.2" x2="704" y2="175.2"/>
+<text class="ax ar" x="44" y="179.2">400</text>
+<line class="grid" x1="52" y1="104.5" x2="704" y2="104.5"/>
+<text class="ax ar" x="44" y="108.5">800</text>
+<line class="grid" x1="52" y1="33.7" x2="704" y2="33.7"/>
+<text class="ax ar" x="44" y="37.7">1200</text>
+<line class="ref" x1="52" y1="108.1" x2="704" y2="108.1"/>
+<text class="reflbl" x="58" y="101.1" style="text-anchor:start">05114 基準 779 步（但其訓練環境較難）</text>
+<rect class="bar s1" x="59.0" y="243.7" width="51.2" height="2.3" rx="3"><title>06111 · ep_len_mean 13.2 步</title></rect>
+<text class="ax ac" x="84.6" y="266">06111</text>
+<text class="vlbl ac" x="84.6" y="237.7">13</text>
+<rect class="bar s1" x="124.2" y="239.9" width="51.2" height="6.1" rx="3"><title>06112 · ep_len_mean 34.3 步</title></rect>
+<text class="ax ac" x="149.8" y="266">06112</text>
+<text class="vlbl ac" x="149.8" y="233.9">34</text>
+<rect class="bar s1" x="189.4" y="238.1" width="51.2" height="7.9" rx="3"><title>06113 · ep_len_mean 44.4 步</title></rect>
+<text class="ax ac" x="215.0" y="266">06113</text>
+<text class="vlbl ac" x="215.0" y="232.1">44</text>
+<rect class="bar s1" x="254.6" y="185.8" width="51.2" height="60.2" rx="3"><title>06114 · ep_len_mean 340.0 步</title></rect>
+<text class="ax ac" x="280.2" y="266">06114</text>
+<text class="vlbl ac" x="280.2" y="179.8">340</text>
+<rect class="bar s1" x="319.8" y="85.9" width="51.2" height="160.1" rx="3"><title>06115 · ep_len_mean 904.7 步</title></rect>
+<text class="ax ac" x="345.4" y="266">06115</text>
+<text class="vlbl ac" x="345.4" y="79.9">905</text>
+<rect class="bar s1" x="385.0" y="54.6" width="51.2" height="191.4" rx="3"><title>06116 · ep_len_mean 1081.9 步</title></rect>
+<text class="ax ac" x="410.6" y="266">06116</text>
+<text class="vlbl ac" x="410.6" y="48.6">1082</text>
+<rect class="bar s1" x="450.2" y="41.9" width="51.2" height="204.1" rx="3"><title>06117 · ep_len_mean 1153.8 步</title></rect>
+<text class="ax ac" x="475.8" y="266">06117</text>
+<text class="vlbl ac" x="475.8" y="35.9">1154</text>
+<rect class="bar s1" x="515.4" y="43.8" width="51.2" height="202.2" rx="3"><title>06118 · ep_len_mean 1142.7 步</title></rect>
+<text class="ax ac" x="541.0" y="266">06118</text>
+<text class="vlbl ac" x="541.0" y="37.8">1143</text>
+<rect class="bar s1" x="580.6" y="37.2" width="51.2" height="208.8" rx="3"><title>06119 · ep_len_mean 1180.1 步</title></rect>
+<text class="ax ac" x="606.2" y="266">06119</text>
+<text class="vlbl ac" x="606.2" y="31.2">1180</text>
+<rect class="bar s1" x="645.8" y="38.8" width="51.2" height="207.2" rx="3"><title>06120 · ep_len_mean 1170.9 步</title></rect>
+<text class="ax ac" x="671.4" y="266">06120</text>
+<text class="vlbl ac" x="671.4" y="32.8">1171</text>
+<text class="ax ac" x="378.0" y="284">自動迴圈輪次（06111 為 Stage 1 起點）</text>
+  </svg>
+  <figcaption>整條曲線是「先挖洞再填洞」。06111 用純 delay=2 硬訓把 05113 的能力砸掉（1034 → 13 步），接下來 9 輪、共 1.35M steps 的自動調參，主要工作是把 delay=2 的比重一路調降（50% → 30%）把模型救回來，從 06116 起參數凍結（規則 E）、效能在 1150 附近持平。</figcaption>
+</figure>
+
+<div class="card warn">
+  <h3 style="color:var(--critical);margin-top:0">停止條件從未達成</h3>
+  <p style="margin-bottom:0">設定是 <code>short_ratio &lt; 15%</code> 收工，但 9 輪跑完最低只到 <b>25.8%</b>（06119），最後一輪回到 32.0%。迴圈是跑滿次數才停，不是收斂才停。這代表當前的參數搜尋空間裡不存在滿足該門檻的解 — 門檻本身可能不切實際，或者需要調的是獎勵函數／網路結構，而不只是 DR 強度。</p>
+</div>
+
+<h3>自動調參規則觸發紀錄</h3>
+<div class="scroll">
+<table>
+  <thead><tr><th>輪次</th><th class="num">總集次</th><th class="num">平均集長</th><th class="num">short_ratio</th>
+    <th class="num">critic 趨勢</th><th>觸發規則</th><th>參數異動</th></tr></thead>
+  <tbody>
+    <tr><td>06112</td><td class="num">5648</td><td class="num">26.6</td><td class="num">86.5%</td><td class="num">+95.3%</td>
+      <td><b>D</b> 學不動</td><td>delay2 0.5→0.45、外擾 0.3→0.25</td></tr>
+    <tr><td>06113</td><td class="num">4590</td><td class="num">32.7</td><td class="num">78.8%</td><td class="num">+23.1%</td>
+      <td><b>A</b> 死太快</td><td>delay2 0.45→0.40</td></tr>
+    <tr><td>06114</td><td class="num">2022</td><td class="num">74.2</td><td class="num">66.0%</td><td class="num">+53.8%</td>
+      <td><b>D</b> 學不動</td><td>delay2 0.40→0.35、外擾 0.25→0.20</td></tr>
+    <tr><td>06115</td><td class="num">245</td><td class="num">612.2</td><td class="num">41.2%</td><td class="num">−7.0%</td>
+      <td><b>A</b> 死太快</td><td>delay2 0.35→0.30</td></tr>
+    <tr><td>06116</td><td class="num">170</td><td class="num">882.4</td><td class="num">32.9%</td><td class="num">−45.3%</td>
+      <td><b>E</b> 維持</td><td>—</td></tr>
+    <tr><td>06117</td><td class="num">150</td><td class="num">1000.0</td><td class="num">29.3%</td><td class="num">−59.8%</td>
+      <td><b>E</b> 維持</td><td>—</td></tr>
+    <tr><td>06118</td><td class="num">147</td><td class="num">1020.4</td><td class="num">34.0%</td><td class="num">−43.9%</td>
+      <td><b>E</b> 維持</td><td>—</td></tr>
+    <tr><td>06119</td><td class="num">128</td><td class="num">1171.9</td><td class="num">25.8%</td><td class="num">−32.1%</td>
+      <td><b>E</b> 維持</td><td>—</td></tr>
+    <tr><td>06120</td><td class="num">153</td><td class="num">980.4</td><td class="num">32.0%</td><td class="num">−82.1%</td>
+      <td><b>E</b> 維持</td><td>跑滿 9 輪結束</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ============ 5 ============ -->
+<h2 id="s5">5. 可調參數全表</h2>
+
+<p>以下是前面七支腳本裡<b>所有</b>可調的旋鈕，按「上機時該不該動它」分組。「現值」是 05114／06120 實際使用的值。</p>
+
+<h3>A. 硬體模擬參數 — 上機時必須對齊實體量測值</h3>
+<div class="scroll">
+<table>
+  <thead><tr><th>參數</th><th class="num">現值</th><th>物理意義</th><th>上機對應</th></tr></thead>
+  <tbody>
+    <tr class="hl"><td><code>delay_steps</code></td><td class="num">1 或 2</td>
+      <td>控制指令延遲的步數</td>
+      <td><b>最關鍵。</b>量測「感測器取樣 → 網路推論 → 驅動器出力」的端到端延遲，除以 40 ms。必須 ≤ 2。</td></tr>
+    <tr><td><code>alpha</code></td><td class="num">0.6</td>
+      <td>一階低通濾波係數：<code>出力 = 0.6×指令 + 0.4×前次出力</code></td>
+      <td>馬達／驅動器的一階響應。等效時間常數 τ ≈ 44 ms、−3dB 截止 ≈ 3.6 Hz。用步階響應量測實體馬達後回填。</td></tr>
+    <tr><td><code>obs_noise_std</code></td><td class="num">0.01</td>
+      <td>感測器高斯雜訊標準差，四個觀測量共用</td>
+      <td>位置 ±1 cm、角度 ±0.573°、速度 ±0.01（1σ）。<b>編碼器解析度必須優於此值</b>，否則模型沒見過那麼髒的訊號。</td></tr>
+    <tr><td><code>obs_noise_enable</code></td><td class="num">True</td>
+      <td>是否啟用感測器雜訊</td>
+      <td>訓練時 True；05121 測試時設 False 以排除變因。上機無意義（真實雜訊自然存在）。</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>B. 獎勵函數權重 — 決定控制風格，重訓才會生效</h3>
+<div class="scroll">
+<table>
+  <thead><tr><th>參數</th><th class="num">現值</th><th>在程式中的位置</th><th>作用</th></tr></thead>
+  <tbody>
+    <tr><td><code>q_angle</code></td><td class="num">10.0</td><td>硬寫在 <code>step()</code></td><td>桿角度偏差懲罰，權重最高 — 主要控制目標</td></tr>
+    <tr><td><code>q_pos</code></td><td class="num">5.0</td><td>硬寫在 <code>step()</code></td><td>車體位置偏差懲罰。經歷 1.0 → 3.0 → 5.0 三次上調，用來壓制車體飄移</td></tr>
+    <tr><td><code>q_pole_vel</code></td><td class="num">0.5</td><td>硬寫在 <code>step()</code></td><td>桿角速度懲罰（阻尼項）</td></tr>
+    <tr><td><code>q_cart_vel</code></td><td class="num">0.1</td><td>硬寫在 <code>step()</code></td><td>車體速度懲罰</td></tr>
+    <tr><td><code>force_penalty</code></td><td class="num">0.005</td><td>建構子參數 ✓</td><td>控制力平方懲罰 — 省電／省馬達</td></tr>
+    <tr><td><code>jerk_penalty</code></td><td class="num">0.02</td><td>建構子參數 ✓</td><td>一階差分（Jerk）懲罰 — 抑制指令抖動</td></tr>
+    <tr><td><code>snap_penalty</code></td><td class="num">0.02</td><td>建構子參數 ✓</td><td>二階差分（Snap）懲罰 — 抑制指令加速度變化</td></tr>
+    <tr><td><code>smoothness_penalty</code></td><td class="num">0.05</td><td>建構子參數 ✓</td><td>對近 5 步移動平均的偏差懲罰 — 整體平滑度</td></tr>
+    <tr class="bad"><td><code>position_penalty</code></td><td class="num">0.5</td><td>建構子參數 <b>（死參數）</b></td>
+      <td><b>賦值後從未被讀取。</b>改它不會有任何效果 — 真正生效的是硬寫的 <code>q_pos=5.0</code></td></tr>
+    <tr class="bad"><td><code>velocity_penalty</code></td><td class="num">0.1</td><td>建構子參數 <b>（死參數）</b></td>
+      <td><b>同上，完全沒作用。</b>真正生效的是硬寫的 <code>q_cart_vel=0.1</code></td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>C. 穩態死區獎勵 — 定義「算不算穩住了」</h3>
+<div class="scroll">
+<table>
+  <thead><tr><th>門檻</th><th class="num">現值</th><th>觸發效果</th></tr></thead>
+  <tbody>
+    <tr><td>第一層：<code>|角度| &lt; 0.02</code> 且 <code>|角速度| &lt; 0.05</code></td><td class="num">+2.0</td>
+      <td>桿子站穩就給獎勵</td></tr>
+    <tr><td>第二層：再加上 <code>|位置| &lt; 0.1</code> 且 <code>|車速| &lt; 0.1</code></td><td class="num">+5.0</td>
+      <td>桿穩且車也停在中間才給大獎，總計 +7.0</td></tr>
+    <tr><td>獎勵裁切範圍</td><td class="num">[−5.0, 10.0]</td><td>防止梯度爆炸</td></tr>
+    <tr><td>基礎獎勵</td><td class="num">1.0</td><td>每步存活的基本分，再扣掉所有懲罰項</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>D. Domain Randomization — 決定強健性的來源</h3>
+<div class="scroll">
+<table>
+  <thead><tr><th>參數</th><th class="num">05114</th><th class="num">06120</th><th>說明</th></tr></thead>
+  <tbody>
+    <tr><td><code>delay_randomize</code></td><td class="num">True</td><td class="num">True</td><td>每集重抽延遲步數</td></tr>
+    <tr><td><code>delay_random_range</code></td><td class="num">(1, 2)</td><td class="num">(1, 2)</td>
+      <td>原本試過 (1,4)，Critic 無法收斂才縮小</td></tr>
+    <tr><td><code>delay2_prob</code></td><td class="num">0.5（均勻）</td><td class="num">0.30</td>
+      <td>抽到 delay=2 的機率。05114 用 <code>randint</code> 均勻抽，06xxx 改用 <code>choice</code> 可加權</td></tr>
+    <tr><td><code>disturbance_enable</code></td><td class="num">True</td><td class="num">True</td><td>是否注入外力擾動</td></tr>
+    <tr><td><code>disturbance_probability</code></td><td class="num">0.30</td><td class="num">0.20</td><td>每集觸發擾動的機率</td></tr>
+    <tr><td><code>disturbance_start_range</code></td><td class="num">(50, 300)</td><td class="num">(50, 300)</td><td>擾動起始步數區間</td></tr>
+    <tr><td><code>disturbance_magnitude_range</code></td><td class="num">(0.1, 0.3)</td><td class="num">(0.1, 0.3)</td>
+      <td>每步注入的角速度衝量。原本 (0.3, 0.8) 太強（等效最高 6.4 rad/s）</td></tr>
+    <tr><td><code>disturbance_duration_range</code></td><td class="num">(2, 5)</td><td class="num">(2, 5)</td>
+      <td>擾動持續步數。訓練時是<b>跨步分散</b>施加（與測試腳本不同）</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>E. TD3 超參數 — 七支腳本從未動過</h3>
+<div class="scroll">
+<table>
+  <thead><tr><th>參數</th><th class="num">現值</th><th>說明</th></tr></thead>
+  <tbody>
+    <tr><td><code>policy_delay</code></td><td class="num">2</td><td>Actor 每 2 次 Critic 更新才更新一次（TD3 核心機制）</td></tr>
+    <tr><td><code>target_policy_noise</code></td><td class="num">0.2</td><td>Target Policy Smoothing 雜訊</td></tr>
+    <tr><td><code>target_noise_clip</code></td><td class="num">0.5</td><td>上述雜訊的裁切範圍</td></tr>
+    <tr><td><code>learning_rate</code></td><td class="num">1e-3</td><td>Actor 與 Critic 共用</td></tr>
+    <tr><td><code>batch_size</code></td><td class="num">256</td><td></td></tr>
+    <tr><td><code>buffer_size</code></td><td class="num">200000</td><td>Replay buffer 容量</td></tr>
+    <tr><td>探索雜訊 <code>sigma</code></td><td class="num">0.2</td><td><code>NormalActionNoise</code>，補償 Actor 延遲更新</td></tr>
+    <tr><td><code>policy</code></td><td class="num">MlpPolicy</td><td>SB3 預設 MLP（256×256），<b>從未改過網路結構</b></td></tr>
+    <tr><td><code>total_timesteps</code></td><td class="num">150000</td><td>每次訓練固定 150K 步</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>F. 環境參數</h3>
+<div class="scroll">
+<table>
+  <thead><tr><th>參數</th><th class="num">現值</th><th>說明</th></tr></thead>
+  <tbody>
+    <tr><td>環境 ID</td><td class="num">InvertedPendulum-v4</td><td>已被 gymnasium 標記為過時，建議評估升級 v5</td></tr>
+    <tr><td><code>max_episode_steps</code></td><td class="num">2000</td><td>05111/05112 用預設 1000，05113 起改 2000</td></tr>
+    <tr><td>reset 桿角擾動</td><td class="num">±0.2 rad</td><td>05113 起加入，讓 Settling Time 有意義</td></tr>
+    <tr><td>reset 桿角速度擾動</td><td class="num">±0.1 rad/s</td><td>同上</td></tr>
+    <tr><td>觀測空間</td><td class="num">5 維</td><td>原始 4 維 ＋ 濾波後的實際出力（讓模型知道馬達真正做了什麼）</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>G. 自動迴圈規則門檻</h3>
+<div class="scroll">
+<table>
+  <thead><tr><th>門檻</th><th class="num">現值</th><th>作用</th></tr></thead>
+  <tbody>
+    <tr><td>停止條件 <code>short_ratio</code></td><td class="num">&lt; 0.15</td><td><b>9 輪從未達成</b>，最佳 0.258</td></tr>
+    <tr><td>規則 D 觸發 <code>critic_trend</code></td><td class="num">&gt; +0.5</td><td>學不動 → 同時降 delay2 與外擾機率各 0.05</td></tr>
+    <tr><td>規則 A 觸發 <code>short_ratio</code></td><td class="num">&gt; 0.4</td><td>死太快 → 降 delay2_prob 0.05</td></tr>
+    <tr><td>規則 C 觸發 <code>dist_ratio</code></td><td class="num">&gt; 0.25</td><td>卡中段 → 降擾動上限 0.05、持續步數上限 1</td></tr>
+    <tr><td>規則 B 觸發</td><td class="num">short≤0.4 且 dist&lt;0.1</td><td>太輕鬆 → 升外擾機率 0.05</td></tr>
+    <tr><td>參數下／上限</td><td class="num">delay2 ≥ 0.2<br>外擾 0.2–0.5</td><td>防止參數跑飛</td></tr>
+    <tr><td>集長分類門檻</td><td class="num">50 / 300 步</td><td>short &lt; 50 ≤ dist &lt; 300 ≤ long</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ============ 6 ============ -->
+<h2 id="s6">6. 量化指標定義</h2>
+
+<p>13 項指標，每個 episode 結束時算一次並寫入 TensorBoard 的 <code>control/</code> 命名空間。角度以弧度計、以垂直為零點。</p>
+
+<div class="scroll">
+<table>
+  <thead><tr><th>指標</th><th>定義</th><th>控制工程意義</th><th>方向</th></tr></thead>
+  <tbody>
+    <tr><td><code>ISE</code></td><td>Σ θ²</td><td>誤差平方積分 — 重罰大偏差</td><td>越小越好</td></tr>
+    <tr><td><code>IAE</code></td><td>Σ |θ|</td><td>絕對誤差積分 — 對所有偏差一視同仁</td><td>越小越好</td></tr>
+    <tr><td><code>ITAE</code></td><td>Σ t·|θ|</td><td>時間加權誤差 — 重罰「拖很久才修正」</td><td>越小越好</td></tr>
+    <tr class="hl"><td><code>ISE_per_step</code></td><td>ISE / n</td><td><b>跨版本比較請用這個</b> — 排除集長造成的膨脹</td><td>越小越好</td></tr>
+    <tr><td><code>IAE_per_step</code></td><td>IAE / n</td><td>同上</td><td>越小越好</td></tr>
+    <tr><td><code>ITAE_per_step</code></td><td>ITAE / n</td><td>同上</td><td>越小越好</td></tr>
+    <tr><td><code>Episode_Length</code></td><td>n</td><td>該集存活步數 — 最直接的成敗指標</td><td>越大越好</td></tr>
+    <tr><td><code>Overshoot_max_angle</code></td><td>max |θ|</td><td>最大超調量 — 整集離垂直最遠的一刻</td><td>越小越好</td></tr>
+    <tr><td><code>Settling_Time_steps</code></td><td>首次 |θ| &lt; 0.01 的步數</td>
+      <td>穩定時間。門檻 05111 是 0.02、05112 起收緊到 0.01</td><td>越小越好</td></tr>
+    <tr><td><code>Steady_State_Error</code></td><td>後 20% 步數的 mean|θ|</td><td>穩態誤差 — 收斂後的殘餘偏差</td><td>越小越好</td></tr>
+    <tr><td><code>RMS_Control_Effort</code></td><td>√(mean a²)</td><td>控制力均方根 — 直接對應馬達發熱與耗電</td><td>越小越好</td></tr>
+    <tr><td><code>Position_ISE</code></td><td>Σ x²</td><td>車體位置誤差平方積分 — 防止「桿穩了但車飄走」</td><td>越小越好</td></tr>
+    <tr><td><code>Position_ISE_per_step</code></td><td>Position_ISE / n</td><td>同上，正規化版</td><td>越小越好</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="card note">
+  <p style="margin:0"><b>哪幾版有哪些指標不一致。</b>05111 只有 8 項（無任何 per_step）；05112 有 per_step 三兄弟與 <code>Episode_Length</code>，但沒有 <code>Position_ISE_per_step</code>；05113 相反，有 <code>Position_ISE_per_step</code> 但沒有 <code>Episode_Length</code>；05114 起才是完整 13 項。這是第 3 節表格 05111 的 ISE/步 欄位為空的原因。</p>
+</div>
+
+<h3>壓力測試專用指標（05121）</h3>
+<div class="scroll">
+<table>
+  <thead><tr><th>指標</th><th>定義</th><th>通過標準</th></tr></thead>
+  <tbody>
+    <tr><td>平均存活步數</td><td>50 集的 <code>survival_steps</code> 平均</td><td>≥ 1900 / 2000 步</td></tr>
+    <tr><td>恢復時間</td><td>從注入擾動到首次 |θ| &lt; 0.01 的步數</td><td>越小越好；無法恢復記為 inf</td></tr>
+    <tr><td>恢復率</td><td>50 集中成功恢復的比例</td><td>= 100% 才算該強度通過</td></tr>
+    <tr><td>最大角度偏移</td><td>整集 max |θ|</td><td>已計算但未寫入 CSV／TensorBoard</td></tr>
+    <tr><td>平均車體偏移</td><td>整集 mean |x|</td><td>已計算但未寫入 CSV／TensorBoard</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ============ 7 ============ -->
+<h2 id="s7">7. 模擬 → 實體規格轉換</h2>
+
+<p>把模擬裡的無單位數字換算成可以寫進採購規格書的實體需求。基礎：MuJoCo <code>timestep=0.02 s</code>、<code>frame_skip=2</code>，故一個控制步 = <b>0.04 s</b>。</p>
+
+<div class="scroll">
+<table>
+  <thead><tr><th>項目</th><th class="num">模擬值</th><th class="num">實體規格</th><th>備註</th></tr></thead>
+  <tbody>
+    <tr class="hl"><td><b>控制頻率</b></td><td class="num">dt = 0.04 s</td><td class="num"><b>25 Hz</b></td>
+      <td>整個迴圈（讀感測器 → 推論 → 出力）必須在 40 ms 內完成</td></tr>
+    <tr class="hl"><td><b>可容忍延遲</b></td><td class="num">2 控制步</td><td class="num"><b>≤ 80 ms</b></td>
+      <td><b>硬上限。</b>3 步（120 ms）時模型完全失控，沒有中間地帶</td></tr>
+    <tr><td>馬達一階響應</td><td class="num">α = 0.6</td><td class="num">τ ≈ 44 ms<br>−3dB ≈ 3.6 Hz</td>
+      <td>實體馬達若明顯更慢，必須改 α 重訓</td></tr>
+    <tr><td>作動器出力</td><td class="num">a ∈ [−3, 3]<br>gear = 100</td><td class="num"><b>±300 N</b></td>
+      <td>實際常用區間由 RMS ≈ 0.52 推得 ≈ 52 N，尖峰才需要 300 N</td></tr>
+    <tr><td>車體質量</td><td class="num">10.47 kg</td><td class="num">10.47 kg</td><td>容忍 ±30%（7.3 – 13.6 kg）</td></tr>
+    <tr><td>桿件質量</td><td class="num">5.02 kg</td><td class="num">5.02 kg</td><td>同上比例縮放</td></tr>
+    <tr><td>滑軌行程</td><td class="num">±1.0 m</td><td class="num"><b>≥ 2 m</b></td>
+      <td>超出即 terminate。實體需加機械限位與軟體保護</td></tr>
+    <tr><td>失敗判定</td><td class="num">|θ| &gt; 0.2 rad</td><td class="num"><b>±11.5°</b></td>
+      <td>超過此角度環境即終止 — 實體上應提早觸發急停</td></tr>
+    <tr><td>角度感測解析度</td><td class="num">σ = 0.01 rad</td><td class="num">優於 <b>0.57°</b></td>
+      <td>模型訓練時看到的雜訊水準，編碼器須優於此</td></tr>
+    <tr><td>位置感測解析度</td><td class="num">σ = 0.01 m</td><td class="num">優於 <b>1 cm</b></td><td>同上</td></tr>
+    <tr><td>擾動容忍（90% 恢復）</td><td class="num">0.5 rad/s</td><td class="num"><b>0.5 rad/s 瞬時角速度</b></td>
+      <td>約等於輕推一下。1.5 rad/s 只剩 44% 恢復率</td></tr>
+    <tr><td>擾動恢復時間</td><td class="num">16 步</td><td class="num"><b>0.64 s</b></td><td>05114 於 0.5 rad/s 衝量下的實測</td></tr>
+    <tr><td>觀測向量</td><td class="num">5 維</td>
+      <td class="num">x, θ, ẋ, θ̇, u<sub>prev</sub></td>
+      <td>第 5 維是<b>濾波後的前次出力</b>，不是原始指令 — 實作時務必送對</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="card note">
+  <h3 style="margin-top:0">上機時觀測值的組裝順序（容易做錯的地方）</h3>
+  <ol style="margin-bottom:0">
+    <li>讀感測器得 <code>[x, θ, ẋ, θ̇]</code>（<b>不要</b>自己加雜訊，真實雜訊已存在）</li>
+    <li>串接上一步的<b>濾波後出力</b> <code>u_prev</code>（即 <code>alpha×指令 + (1−alpha)×前次</code> 的結果），得 5 維向量</li>
+    <li>送入 <code>model.predict(obs, deterministic=True)</code> — <b>務必 deterministic</b>，上機不要探索雜訊</li>
+    <li>輸出 <code>a ∈ [−3, 3]</code>，乘 gear=100 得牛頓力；經同一組一階濾波後才送驅動器</li>
+    <li>把這次的濾波結果存為下次的 <code>u_prev</code></li>
+  </ol>
+</div>
+
+<!-- ============ 8 ============ -->
+<h2 id="s8">8. 上機前必補</h2>
+
+<div class="card warn">
+  <h3 style="color:var(--critical);margin-top:0">缺陷 1：05121 測試二（初始推力）完全無效</h3>
+  <p>程式先 <code>env.reset()</code>、手動 <code>set_state</code> 注入推力，然後呼叫 <code>run_episode()</code> — 但 <code>run_episode()</code> 開頭又 <code>env.reset()</code> 了一次，把注入的擾動整個沖掉。</p>
+  <p style="margin-bottom:0">證據：11 個不同推力值的結果完全沒有趨勢，且數值一再重複同樣的 1960.02 / 1920.04 / 1880.06 — 那只是 50 集平均的量化值。<b>因此「初始推力容忍上限 3.0」這個結論不成立，不可寫進規格書。</b>修法：把注入動作改成 <code>run_episode</code> 的參數，在它 reset 之後才施加。</p>
+</div>
+
+<div class="card warn">
+  <h3 style="color:var(--critical);margin-top:0">缺陷 2：測試四 A 與四 B 量的是同一件事</h3>
+  <p style="margin-bottom:0"><code>apply_disturbance</code> 用 <code>for _ in range(_dur)</code> 連續呼叫 <code>set_state</code>，但<b>迴圈內不推進物理</b>，所以「持續 5 步、力 0.5」等價於「瞬間注入 2.5 rad/s」。兩個測試因此沿同一條「總衝量」軸移動，不是獨立的兩個維度。好消息是兩組數據互相吻合，曲線本身可信；壞消息是<b>「持續性外力」這個工況從未被測過</b> — 而那正是實體上最常見的擾動型態（風、纜線拉力、軌道摩擦）。訓練時的 wrapper 反而是正確的跨步施力，測試與訓練在此處不一致。</p>
+</div>
+
+<div class="card warn">
+  <h3 style="color:var(--critical);margin-top:0">缺陷 3：delay=3 是懸崖而非斜坡</h3>
+  <p style="margin-bottom:0">delay=2 存活 1874 步、delay=3 只剩 29 步。<b>沒有任何安全邊際。</b>實體系統的延遲會隨負載、溫度、通訊壅塞而抖動，只要偶爾超過 80 ms 就會摔。上機前應該：<br>
+  ① 實測延遲的分佈而非平均值，確認 P99 也在 80 ms 內；<br>
+  ② 或重訓一個 <code>delay_random_range=(1,3)</code> 的版本換取邊際（先前試 (1,4) 失敗，(1,3) 未試過）。</p>
+</div>
+
+<div class="card note">
+  <h3 style="margin-top:0">其他待辦</h3>
+  <ul style="margin-bottom:0">
+    <li><b>06120 從未壓力測試。</b>這是目前投資報酬率最高的一件事 — 把 05121 的 <code>MODEL_PATH</code> 指向 <code>machinezip/06120</code> 跑一次，就能確定該不該換模型。</li>
+    <li><b>兩個死參數。</b><code>position_penalty</code> 與 <code>velocity_penalty</code> 賦值後從未被讀取，真正生效的是硬寫的 5.0 與 0.1。調它們不會有任何效果 — 這是最容易浪費一整輪訓練的陷阱。</li>
+    <li><b>模型路徑散亂。</b>CLAUDE.md 規定輸出進 <code>output/models/</code>，但該資料夾不存在，所有 .zip 都在 <code>rl_project/</code> 根目錄，而 <code>TD3.load("rl_project/05113")</code> 這類硬寫路徑散落各處。上機前應統一。</li>
+    <li><b>環境版本過時。</b><code>InvertedPendulum-v4</code> 已被 gymnasium 標記 deprecated。若要升 v5 須確認物理參數是否改變，否則現有壓力測試數據全部失效。</li>
+    <li><b>沒有安全層。</b>模擬裡摔倒只是 terminate，實體上是撞擊。上機前需要獨立於模型之外的看門狗：角度超限急停、行程超限急停、推論逾時則輸出歸零。</li>
+    <li><b>從未測過 sim-to-real 的最大殺手</b>：靜摩擦與背隙（backlash）。目前的 wrapper 只模擬了延遲、一階濾波與高斯雜訊，完全沒有摩擦模型。</li>
+  </ul>
+</div>
+
+<footer>
+  由 Claude Code 依 <code>rl_project/</code> 原始碼、<code>tensorboard_logs/</code>、<code>tensorboard_machine_logs/</code>、<code>tensorboard_test_logs_05121/</code>、<code>output/*.csv</code> 與 <code>output/0611_loop_run.log</code> 實際數據產生 · 2026-09-22<br>
+  檔案：<code>output/hardware_deployment_reference.html</code> · 姊妹文件：<code>output/experiment_diff_05111_0611.html</code>
+</footer>
+
+</div>
+</body>
+</html>

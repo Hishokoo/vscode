@@ -1,0 +1,6 @@
+duration,mean_recovery,mean_survival,recovered_ratio
+1,16.044444444444444,1781.32,0.9
+5,0.0,502.4,0.02
+10,inf,501.46,0.0
+20,inf,481.0,0.0
+30,inf,501.0,0.0

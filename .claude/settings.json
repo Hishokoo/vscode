@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /Users/andrewchen/vscode/rl_project/tools/worklog_hook.py"
+          }
+        ]
+      }
+    ]
+  }
+}

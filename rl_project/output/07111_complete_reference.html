@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>07111 完整技術文件</title>
+<style>
+  :root{
+    --bg:#fbfaf8; --panel:#ffffff; --surface-1:#fcfcfb;
+    --ink:#0b0b0b; --ink-2:#52514e; --muted:#83817b;
+    --line:#e3e0da; --accent:#b4540a; --accent-soft:#fdf1e7;
+    --code-bg:#f3f1ec;
+    --series-1:#2a78d6; --series-2:#eb6834;
+    --good:#0ca30c; --critical:#d03b3b; --serious:#ec835a;
+    --good-soft:#eaf6ea; --crit-soft:#fbeaea; --warn-soft:#fdf5e3;
+    --grid:#e8e5df; --ref:#a9a69f;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#141414; --panel:#1f1f1e; --surface-1:#1a1a19;
+      --ink:#ffffff; --ink-2:#c3c2b7; --muted:#918f87;
+      --line:#34332f; --accent:#f0924a; --accent-soft:#2a211c;
+      --code-bg:#262624;
+      --series-1:#3987e5; --series-2:#d95926;
+      --good-soft:#16261a; --crit-soft:#2c1a1a; --warn-soft:#2a2418;
+      --grid:#2e2e2b; --ref:#6a6862;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#141414; --panel:#1f1f1e; --surface-1:#1a1a19;
+    --ink:#ffffff; --ink-2:#c3c2b7; --muted:#918f87;
+    --line:#34332f; --accent:#f0924a; --accent-soft:#2a211c;
+    --code-bg:#262624;
+    --series-1:#3987e5; --series-2:#d95926;
+    --good-soft:#16261a; --crit-soft:#2c1a1a; --warn-soft:#2a2418;
+    --grid:#2e2e2b; --ref:#6a6862;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);line-height:1.72;font-size:16px;
+    font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","PingFang TC",Segoe UI,sans-serif}
+  .wrap{max-width:1180px;margin:0 auto;padding:44px 22px 90px}
+  header{border-bottom:2px solid var(--ink);padding-bottom:18px;margin-bottom:12px}
+  h1{font-size:29px;margin:0 0 6px;letter-spacing:-.01em}
+  .sub{color:var(--muted);font-size:14.5px;margin:0}
+  h2{font-size:21px;margin:52px 0 14px;padding-top:20px;border-top:1px solid var(--line)}
+  h3{font-size:16px;margin:26px 0 8px;color:var(--accent)}
+  p{margin:0 0 13px}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.85em;
+    background:var(--code-bg);padding:1px 5px;border-radius:4px}
+  pre{background:var(--code-bg);padding:12px 14px;border-radius:6px;overflow-x:auto;
+    font-size:13px;margin:12px 0}
+  pre code{background:none;padding:0}
+  .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:16px 0}
+  table{border-collapse:collapse;width:100%;min-width:820px;font-size:13.5px;background:var(--panel)}
+  th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+  thead th{background:var(--accent-soft);font-weight:600;white-space:nowrap}
+  td.tag{white-space:nowrap;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;font-weight:600}
+  td.v{white-space:nowrap;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;text-align:right}
+  tr.hl td{background:var(--good-soft)}
+  tr.bad td{background:var(--crit-soft)}
+  .hero{display:flex;flex-wrap:wrap;gap:14px;margin:20px 0}
+  .tile{flex:1 1 150px;min-width:150px;background:var(--panel);border:1px solid var(--line);
+    border-radius:8px;padding:14px 16px}
+  .tile .k{font-size:12.5px;color:var(--muted);display:block;margin-bottom:2px}
+  .tile .val{font-size:25px;font-weight:650;letter-spacing:-.02em;display:block;line-height:1.25}
+  .tile .n{font-size:12.5px;color:var(--ink-2);display:block;margin-top:2px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;
+    padding:16px 20px;margin:16px 0}
+  .card>:first-child{margin-top:0} .card>:last-child{margin-bottom:0}
+  .ok{border-left:4px solid var(--good);background:var(--good-soft)}
+  .ok h3{color:var(--good)}
+  .warn{border-left:4px solid var(--critical);background:var(--crit-soft)}
+  .warn h3{color:var(--critical)}
+  .note{border-left:4px solid var(--serious);background:var(--warn-soft)}
+  ul,ol{margin:0 0 13px;padding-left:22px} li{margin-bottom:5px}
+  figure{margin:24px 0;background:var(--surface-1);border:1px solid var(--line);
+    border-radius:8px;padding:16px 18px 10px}
+  figcaption{font-size:13px;color:var(--ink-2);margin-top:10px;line-height:1.6}
+  figure .ttl{font-size:15px;font-weight:600;margin-bottom:2px}
+  figure .dek{font-size:12.5px;color:var(--muted);margin-bottom:12px}
+  svg{display:block;width:100%;height:auto;overflow:visible}
+  .grid{stroke:var(--grid);stroke-width:1}
+  .ref{stroke:var(--ref);stroke-width:1.5;stroke-dasharray:5 4}
+  .pk{font-size:11.5px;fill:var(--ink-2);text-anchor:middle}
+  .ax{font-size:11.5px;fill:var(--ink-2)} .ar{text-anchor:end} .ac{text-anchor:middle}
+  .vlbl{font-size:12px;fill:var(--ink-2);font-variant-numeric:tabular-nums}
+  .ln{fill:none;stroke-width:2} .ln.s1{stroke:var(--series-1)}
+  .dot{stroke:var(--surface-1);stroke-width:1.5} .dot.s1{fill:var(--series-1)}
+  .bar.s1{fill:var(--series-1)} .bar.s2{fill:var(--series-2)}
+  .bx{fill:var(--panel);stroke:var(--line);stroke-width:1.5;rx:6}
+  .bx-a{fill:var(--accent-soft);stroke:var(--accent)}
+  .bx-g{fill:var(--good-soft);stroke:var(--good)}
+  .bt{font-size:12.5px;fill:var(--ink);text-anchor:middle;font-weight:600}
+  .bs{font-size:10.5px;fill:var(--muted);text-anchor:middle}
+  .fl{stroke:var(--ink-2);stroke-width:1.5;fill:none}
+  footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);
+    color:var(--muted);font-size:13px}
+  .toc{font-size:14px;color:var(--ink-2);margin:18px 0 0}
+  .toc a{color:var(--accent);text-decoration:none;margin-right:16px;white-space:nowrap;
+    display:inline-block}
+  .toc a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>07111 完整技術文件</h1>
+  <p class="sub">Sim-to-Real 領域隨機化重校 · 執行流程、參數設定、指標數據與分析 · 2026-09-28</p>
+</header>
+<p class="toc">
+  <a href="#s1">總覽</a><a href="#s2">執行流程</a><a href="#s3">參數設定</a>
+  <a href="#s4">訓練過程</a><a href="#s5">評估結果</a><a href="#s6">分析</a><a href="#s7">如何執行</a>
+</p>
+
+<!-- ============ 1 ============ -->
+<h2 id="s1">1. 總覽</h2>
+
+<p>07111 是 <b>07 系列的第一支</b>，唯一目標是<b>為實體上機做準備</b>。它不是為了刷模擬分數，而是要產出一個「把真實硬體缺陷都見過一遍」的策略。</p>
+
+<div class="hero">
+  <div class="tile"><span class="k">演算法</span><span class="val">TD3</span><span class="n">從零訓練 300K 步</span></div>
+  <div class="tile"><span class="k">實際上機情境滿分率</span><span class="val" style="color:var(--good)">96.7%</span><span class="n">realistic · 60 集</span></div>
+  <div class="tile"><span class="k">最壞情境滿分率</span><span class="val" style="color:var(--serious)">53.3%</span><span class="n">worst · 60 集</span></div>
+  <div class="tile"><span class="k">馬達出力佔比</span><span class="val">6.5%</span><span class="n">RMS 0.19 / 滿格 3.0</span></div>
+  <div class="tile"><span class="k">撞邊界比例</span><span class="val" style="color:var(--good)">0%</span><span class="n">四情境全部</span></div>
+</div>
+
+<div class="scroll">
+<table>
+  <thead><tr><th style="width:150px">項目</th><th>內容</th></tr></thead>
+  <tbody>
+    <tr><td>訓練腳本</td><td><code>experiments/machine/07111trytrain_mujoco_td3.py</code></td></tr>
+    <tr><td>評估腳本</td><td><code>experiments/evaluation/07seriestest.py</code></td></tr>
+    <tr><td>模型輸出</td><td><code>output/models/07111.zip</code></td></tr>
+    <tr><td>TensorBoard</td><td><code>tensorboard_logs/machine/07111_Sim2Real_DR_1/</code></td></tr>
+    <tr><td>訓練耗時</td><td>759 秒（約 12.6 分鐘），392 fps，CPU</td></tr>
+    <tr class="hl"><td>獨立性</td><td><b>完全獨立</b>——從隨機初始化訓練，不讀取任何 <code>.zip</code>。只要有原始碼 + gymnasium/SB3 就能重現</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>與 05114 的關係</h3>
+<p>07111 最初設計為 <code>TD3.load("output/models/05114")</code> 續訓，後來改為<b>從零訓練</b>以確保可重現性。代價是與 05114 的比較從「只差領域隨機化」變成「<b>領域隨機化 + 訓練起點都不同</b>」——解讀兩者差異時必須把這點納入考量，不能直接歸因於 DR 設定。</p>
+
+<!-- ============ 2 ============ -->
+<h2 id="s2">2. 執行流程</h2>
+
+<figure>
+  <div class="ttl">單步執行管線（<code>AdvancedMotorWrapper.step()</code>）</div>
+  <div class="dek">agent 的一個動作，要經過四層硬體模擬才會真正作用在物理引擎上</div>
+  <svg viewBox="0 0 720 230" role="img" aria-label="流程圖：Agent 輸出經低通濾波、延遲佇列、指令抖動後進入物理引擎，乾淨狀態分流至獎勵指標與觀測組裝">
+    <defs>
+      <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--ink-2)"/>
+      </marker>
+    </defs>
+    <rect class="bx bx-a" x="14"  y="24" width="104" height="46"/>
+    <text class="bt" x="66"  y="44">Agent 輸出</text><text class="bs" x="66" y="60">action ∈ [−3,3]</text>
+    <rect class="bx" x="148" y="24" width="104" height="46"/>
+    <text class="bt" x="200" y="44">低通濾波</text><text class="bs" x="200" y="60">alpha（馬達慣性）</text>
+    <rect class="bx" x="282" y="24" width="104" height="46"/>
+    <text class="bt" x="334" y="44">延遲佇列</text><text class="bs" x="334" y="60">delay_steps</text>
+    <rect class="bx" x="416" y="24" width="104" height="46"/>
+    <text class="bt" x="468" y="44">指令抖動</text><text class="bs" x="468" y="60">jitter 沿用舊值</text>
+    <rect class="bx" x="550" y="24" width="156" height="46"/>
+    <text class="bt" x="628" y="44">MuJoCo 物理引擎</text><text class="bs" x="628" y="60">＋乾摩擦、增益誤差</text>
+    <line class="fl" x1="118" y1="47" x2="144" y2="47" marker-end="url(#ah)"/>
+    <line class="fl" x1="252" y1="47" x2="278" y2="47" marker-end="url(#ah)"/>
+    <line class="fl" x1="386" y1="47" x2="412" y2="47" marker-end="url(#ah)"/>
+    <line class="fl" x1="520" y1="47" x2="546" y2="47" marker-end="url(#ah)"/>
+    <line class="fl" x1="628" y1="70" x2="628" y2="104"/>
+    <line class="fl" x1="159" y1="104" x2="628" y2="104"/>
+    <text class="bs" x="700" y="100" style="text-anchor:end">乾淨狀態（真實角度與位置）</text>
+    <line class="fl" x1="561" y1="104" x2="561" y2="136" marker-end="url(#ah)"/>
+    <line class="fl" x1="159" y1="104" x2="159" y2="136" marker-end="url(#ah)"/>
+    <rect class="bx bx-g" x="416" y="140" width="290" height="46"/>
+    <text class="bt" x="561" y="160">獎勵計算 ＋ control/ 指標</text>
+    <text class="bs" x="561" y="176">用乾淨狀態，不含雜訊與 bias</text>
+    <rect class="bx" x="14"  y="140" width="290" height="46"/>
+    <text class="bt" x="159" y="160">加角度 bias ＋ 感測雜訊</text>
+    <text class="bs" x="159" y="176">組成 5 維觀測回傳給 Agent</text>
+    <polyline class="fl" points="14,163 6,163 6,47 10,47" marker-end="url(#ah)"/>
+  </svg>
+  <figcaption>
+    <b>關鍵設計：右下與左下兩條路徑用的是不同資料。</b>獎勵與所有 <code>control/</code> 指標一律使用物理引擎回傳的<b>乾淨狀態</b>；
+    角度零點偏移與感測雜訊<b>只污染 Agent 看到的觀測</b>。理由是 bias 模擬的是「感測器讀錯」，
+    訓練訊號必須獎勵它把<b>真實的桿子</b>立直，否則等於在獎勵它配合自己的量測誤差。
+  </figcaption>
+</figure>
+
+<h3>四層硬體模擬的順序與意義</h3>
+<div class="scroll">
+<table>
+  <thead><tr><th style="width:110px">層</th><th style="width:170px">參數</th><th>模擬什麼</th></tr></thead>
+  <tbody>
+    <tr><td>① 低通濾波</td><td class="tag">alpha</td>
+      <td>馬達電感與轉子慣性造成的一階響應延遲。<code>出力 = α×指令 + (1−α)×前次出力</code></td></tr>
+    <tr><td>② 延遲佇列</td><td class="tag">delay_steps</td>
+      <td>感測器取樣 → 網路推論 → 驅動器出力的端到端通訊/運算延遲</td></tr>
+    <tr><td>③ 指令抖動</td><td class="tag">jitter_prob</td>
+      <td>封包遲到或掉幀時，驅動器<b>保持前一個值</b>的真實行為</td></tr>
+    <tr><td>④ 物理引擎內</td><td class="tag">friction / gain_error</td>
+      <td>滑軌與轉軸的乾摩擦、作動器增益誤差（直接改寫 MuJoCo 模型參數）</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="card note">
+  <h3>已知的順序問題（<code>TODO(07112)</code>）</h3>
+  <p style="margin-bottom:0">目前順序是「濾波 → 延遲 → 抖動」，但低通濾波模擬的是<b>馬達慣性</b>，物理上位於整條鏈的<b>最下游</b>，
+  正確順序應為「延遲 → 抖動 → 濾波」。具體不自洽之處：抖動觸發時驅動器 hold 住舊值，
+  但濾波器狀態已按新指令更新過，hold 的效果沒進到馬達動態。本輪未修正，已在程式碼標註。</p>
+</div>
+
+<h3>額外的終止條件</h3>
+<p><code>InvertedPendulum-v4</code> 原生只在 <code>|角度| &gt; 0.2 rad</code> 時終止，<b>位置完全不在終止條件裡</b>。
+07111 新增了位置終止：</p>
+<pre><code>if abs(cart_pos) &gt; rail_limit:   # rail_limit = 0.9 m
+    terminated = True</code></pre>
+<p>滑軌硬限位是 ±1.0 m，設 0.9 留 10 cm 安全邊界。原生行為下，agent 撞上限位只是被 MuJoCo 擋住、episode 照常進行——模擬裡撞牆沒有後果，實體上卻是撞限位開關或撞機構。</p>
+
+<!-- ============ 3 ============ -->
+<h2 id="s3">3. 參數設定</h2>
+
+<h3>A. 硬體模擬 — 上機時必須對齊實體量測值</h3>
+<div class="scroll">
+<table>
+  <thead><tr><th style="width:170px">參數</th><th style="width:130px">現值</th><th>實體意義與依據</th></tr></thead>
+  <tbody>
+    <tr><td class="tag">delay_random_range</td><td class="v">(0, 1) 均勻</td>
+      <td>25 Hz 下一步 = <b>40 ms</b>。編碼器+MCU 的端到端延遲僅 2~10 ms（<b>0.05~0.25 步</b>），
+      所以 <b>delay=0 才是現實值</b>，delay=1 相當於現實的 4~20 倍。保留它當安全餘裕——實測 delay=1 在無抖動時仍是 100% 滿分，成本極低。</td></tr>
+    <tr><td class="tag">alpha_range</td><td class="v">0.85 ~ 0.98</td>
+      <td>一階響應時間常數 τ = −dt/ln(1−α)：0.85→<b>21 ms</b>、0.98→<b>10 ms</b>。
+      電流控制驅動器實際 &lt;5 ms，此範圍仍偏保守但成本低。隨機化可防止策略學會某個固定濾波器的精確反函數。</td></tr>
+    <tr class="hl"><td class="tag">jitter_prob</td><td class="v">0.02</td>
+      <td><b>從 0.10 調降而來。</b>原值憑直覺設定、無量測根據。實際掉幀率：編碼器直連 MCU(有線) &lt;0.1%、
+      USB serial+Python 1~5%、WiFi/視覺 5~10%。<b>實測 0.10 是唯一的效能瓶頸</b>（見第 6 節）。</td></tr>
+    <tr><td class="tag">obs_noise_std</td><td class="v">(0.001, 0.001,<br>0.02, 0.02)</td>
+      <td>per-channel：位置 ±1 mm、角度 ±0.057°、速度 ±0.02。
+      2000 CPR 編碼器(4倍解碼)量化為 0.0008 rad，故位置/角度用 0.001。
+      速度用 0.02 是因為<b>差分估測會放大雜訊</b>（σ<sub>v</sub> ≈ σ<sub>p</sub>√2/dt ≈ 0.028），不能與位置一起降。</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>B. 新增的實體效應 — 05114 完全沒有的</h3>
+<div class="scroll">
+<table>
+  <thead><tr><th style="width:170px">參數</th><th style="width:130px">現值</th><th>實體意義與依據</th></tr></thead>
+  <tbody>
+    <tr><td class="tag">friction_slide_range</td><td class="v">0 ~ 4 N</td>
+      <td>滑軌乾摩擦。車+桿共 15.49 kg → 正向力 152 N，滾動導軌 μ≈0.01~0.05 → <b>1.5~7.6 N</b>。
+      原生模型 <code>dof_frictionloss=[0,0]</code>，完全沒有乾摩擦，只有黏滯阻尼。</td></tr>
+    <tr><td class="tag">friction_hinge_range</td><td class="v">0 ~ 0.01 N·m</td>
+      <td>轉軸軸承摩擦。對照：θ=0.01 rad 時的重力矩為 0.148 N·m，故 0.01 N·m 約佔 7%。</td></tr>
+    <tr><td class="tag">angle_bias_range</td><td class="v">±0.01 rad</td>
+      <td>感測器零點偏移（±0.57°）。模擬裝歪或滑軌不水平。
+      <b>這是常數偏移，不會像高斯雜訊那樣自己平均掉</b>，會讓策略把桿子平衡在歪掉的角度、導致車體持續漂移。</td></tr>
+    <tr><td class="tag">gain_error_range</td><td class="v">0.85 ~ 1.15</td>
+      <td>作動器增益誤差（±15%）。馬達轉矩常數公差通常 ±10%，加上驅動器校正與溫度導致的出力衰減。
+      以 <code>_base_gear</code> 為基準計算，避免跨集累乘。</td></tr>
+    <tr class="hl"><td class="tag">rail_limit</td><td class="v">0.9 m</td>
+      <td>位置終止門檻。滑軌硬限位 ±1.0 m，留 10 cm 安全邊界。
+      實測滑車最遠只到 0.37 m，正常運作不觸發——<b>純粹是上機安全保險絲</b>。</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>C. 獎勵函數 — 與 05114 完全相同，一個數字都沒改</h3>
+<div class="scroll">
+<table>
+  <thead><tr><th style="width:190px">項目</th><th style="width:110px">權重</th><th>作用</th></tr></thead>
+  <tbody>
+    <tr><td class="tag">q_angle</td><td class="v">10.0</td><td>桿角度偏差懲罰，權重最高——主要控制目標</td></tr>
+    <tr><td class="tag">q_pos</td><td class="v">5.0</td><td>車體位置偏差懲罰。經 1.0→3.0→5.0 三次上調以抑制車體飄移</td></tr>
+    <tr><td class="tag">q_pole_vel</td><td class="v">0.5</td><td>桿角速度懲罰（阻尼項）</td></tr>
+    <tr><td class="tag">q_cart_vel</td><td class="v">0.1</td><td>車體速度懲罰</td></tr>
+    <tr><td class="tag">force_penalty</td><td class="v">0.005</td><td>控制力平方懲罰——省電、省馬達</td></tr>
+    <tr><td class="tag">jerk_penalty</td><td class="v">0.02</td><td>一階差分懲罰——抑制指令抖動</td></tr>
+    <tr><td class="tag">snap_penalty</td><td class="v">0.02</td><td>二階差分懲罰——抑制指令加速度變化</td></tr>
+    <tr><td class="tag">smoothness_penalty</td><td class="v">0.05</td><td>對近 5 步移動平均的偏差懲罰</td></tr>
+    <tr><td>死區獎勵（第一層）</td><td class="v">+2.0</td><td>|θ|&lt;0.02 且 |θ̇|&lt;0.05</td></tr>
+    <tr><td>死區獎勵（第二層）</td><td class="v">+5.0</td><td>再加上 |x|&lt;0.1 且 |ẋ|&lt;0.1，總計 +7.0</td></tr>
+    <tr><td>獎勵裁切</td><td class="v">[−5, 10]</td><td>防止梯度爆炸</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>D. TD3 超參數 — 與 05111（家族唯一從零訓練的版本）一致</h3>
+<div class="scroll">
+<table>
+  <thead><tr><th style="width:190px">參數</th><th style="width:130px">現值</th><th>說明</th></tr></thead>
+  <tbody>
+    <tr><td class="tag">learning_rate</td><td class="v">1e-3</td><td>Actor 與 Critic 共用，固定不衰減</td></tr>
+    <tr><td class="tag">batch_size</td><td class="v">256</td><td></td></tr>
+    <tr><td class="tag">buffer_size</td><td class="v">200,000</td><td>Replay buffer 容量</td></tr>
+    <tr><td class="tag">policy_delay</td><td class="v">2</td><td>Actor 每 2 次 Critic 更新才更新一次（TD3 核心）</td></tr>
+    <tr><td class="tag">target_policy_noise</td><td class="v">0.2</td><td>Target Policy Smoothing</td></tr>
+    <tr><td class="tag">target_noise_clip</td><td class="v">0.5</td><td>上述雜訊的裁切範圍</td></tr>
+    <tr><td class="tag">learning_starts</td><td class="v">100</td><td>SB3 預設值</td></tr>
+    <tr class="bad"><td class="tag">探索雜訊 sigma</td><td class="v">0.2</td>
+      <td><b>陷阱：實際作用是 0.6。</b>SB3 把動作正規化到 [−1,1]、<b>雜訊加在正規化空間</b>，之後才 ×3 放大回 [−3,3]。
+      而策略典型輸出僅 0.111——<b>雜訊是輸出的 5.4 倍</b>，這就是訓練曲線嚴重低估模型能力的原因。</td></tr>
+    <tr><td class="tag">total_timesteps</td><td class="v">300,000</td><td>從零訓練，且環境比 05111 多了四層隨機化</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ============ 4 ============ -->
+<h2 id="s4">4. 訓練過程</h2>
+
+<figure>
+  <div class="ttl">訓練曲線：120K 步後進入平原，後段略為下滑</div>
+  <div class="dek"><code>rollout/ep_len_mean</code>（最近 100 集移動平均，含 σ=0.6 探索雜訊）· 上限 2000 步</div>
+  <svg viewBox="0 0 720 300" role="img" aria-label="訓練曲線：ep_len_mean 由 10 快速爬升至 120K 步的約 1000，於 207K 步達峰值 1101 後緩降至 882">
+<line class="grid" x1="56" y1="254.0" x2="700" y2="254.0"/>
+<text class="ax ar" x="48" y="258.0">0</text>
+<line class="grid" x1="56" y1="194.5" x2="700" y2="194.5"/>
+<text class="ax ar" x="48" y="198.5">300</text>
+<line class="grid" x1="56" y1="135.0" x2="700" y2="135.0"/>
+<text class="ax ar" x="48" y="139.0">600</text>
+<line class="grid" x1="56" y1="75.5" x2="700" y2="75.5"/>
+<text class="ax ar" x="48" y="79.5">900</text>
+<line class="grid" x1="56" y1="16.0" x2="700" y2="16.0"/>
+<text class="ax ar" x="48" y="20.0">1200</text>
+<line class="ref" x1="500.5" y1="35.6" x2="500.5" y2="254"/>
+<polyline class="ln s1" points="56.6,251.9 58.3,250.2 60.9,248.3 63.5,247.2 66.1,245.8 68.8,244.7 71.6,244.9 76.0,242.9 85.8,236.1 137.3,191.2 191.6,143.5 250.4,95.2 303.8,54.6 378.5,42.1 439.7,41.5 500.5,35.6 548.8,52.2 593.8,64.5 657.6,64.2 695.4,79.0"/>
+<circle class="dot s1" cx="56.6" cy="251.9" r="3.5"><title>302 步 · 10.8</title></circle>
+<circle class="dot s1" cx="60.9" cy="248.3" r="3.5"><title>2,293 步 · 28.7</title></circle>
+<circle class="dot s1" cx="66.1" cy="245.8" r="3.5"><title>4,683 步 · 41.3</title></circle>
+<circle class="dot s1" cx="76.0" cy="242.9" r="3.5"><title>9,300 步 · 56.0</title></circle>
+<circle class="dot s1" cx="85.8" cy="236.1" r="3.5"><title>13,899 步 · 90.2</title></circle>
+<circle class="dot s1" cx="137.3" cy="191.2" r="3.5"><title>37,871 步 · 316.4</title></circle>
+<circle class="dot s1" cx="191.6" cy="143.5" r="3.5"><title>63,172 步 · 557.0</title></circle>
+<circle class="dot s1" cx="250.4" cy="95.2" r="3.5"><title>90,577 步 · 800.5</title></circle>
+<circle class="dot s1" cx="303.8" cy="54.6" r="3.5"><title>115,449 步 · 1005.6</title></circle>
+<circle class="dot s1" cx="378.5" cy="42.1" r="3.5"><title>150,242 步 · 1068.3</title></circle>
+<circle class="dot s1" cx="439.7" cy="41.5" r="3.5"><title>178,735 步 · 1071.4</title></circle>
+<circle class="dot s1" cx="500.5" cy="35.6" r="3.5"><title>207,047 步 · 1101.0（峰值）</title></circle>
+<circle class="dot s1" cx="548.8" cy="52.2" r="3.5"><title>229,556 步 · 1017.6</title></circle>
+<circle class="dot s1" cx="593.8" cy="64.5" r="3.5"><title>250,508 步 · 955.7</title></circle>
+<circle class="dot s1" cx="657.6" cy="64.2" r="3.5"><title>280,247 步 · 956.9</title></circle>
+<circle class="dot s1" cx="695.4" cy="79.0" r="3.5"><title>297,861 步 · 882.5（最終）</title></circle>
+<text class="pk" x="500.5" y="26.6">峰值 1101 @ 207K</text>
+<text class="ax ac" x="56.0" y="274">0K</text>
+<text class="ax ac" x="163.3" y="274">50K</text>
+<text class="ax ac" x="270.7" y="274">100K</text>
+<text class="ax ac" x="378.0" y="274">150K</text>
+<text class="ax ac" x="485.3" y="274">200K</text>
+<text class="ax ac" x="592.7" y="274">250K</text>
+<text class="ax ac" x="700.0" y="274">300K</text>
+<text class="ax ac" x="378.0" y="294">訓練步數</text>
+  </svg>
+  <figcaption>
+    曲線在 <b>115K 步就突破 1000</b>，之後進入平原，207K 達峰值 1101，最終收在 882。
+    <b>後段下滑約 20% 值得注意</b>——這暗示 300K 步可能略為過度訓練，或 TD3 在此設定下已到達穩定點附近的震盪。
+    但因為這條曲線含 σ=0.6 的探索雜訊，不能直接當作模型能力退化的證據（見第 6 節）。
+  </figcaption>
+</figure>
+
+<div class="scroll">
+<table>
+  <thead><tr><th>指標</th><th style="width:150px">數值</th><th>判讀</th></tr></thead>
+  <tbody>
+    <tr><td>總步數 / 集數</td><td class="v">297,861 / 532</td><td></td></tr>
+    <tr><td>最終 ep_len_mean</td><td class="v">882.5</td><td>含探索雜訊，非模型真實能力</td></tr>
+    <tr><td>峰值 ep_len_mean</td><td class="v">1101 @ 207K</td><td>最終值比峰值低 20%</td></tr>
+    <tr><td>最後 200 集滿分率</td><td class="v">35.5%</td><td>含雜訊；無雜訊評估為 96.7%</td></tr>
+    <tr><td>最後 200 集中位集長</td><td class="v">694</td><td></td></tr>
+    <tr class="bad"><td>critic_loss 趨勢</td><td class="v">+361.7%</td>
+      <td><b>發散警訊。</b>0611 自動迴圈的「學不動」判定門檻是 +50%，此處是 7 倍</td></tr>
+    <tr><td>訓練期 rail_limit_hit</td><td class="v">2.82%（15/532）</td>
+      <td>訓練中偶爾撞邊界（探索雜訊所致），但評估時為 0%</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ============ 5 ============ -->
+<h2 id="s5">5. 評估結果</h2>
+
+<p>用 <code>07seriestest.py</code> 以 <code>model.predict()</code> 直接評估，<b>不含探索雜訊</b>。四種情境各 60 集，每集上限 2000 步。</p>
+
+<figure>
+  <div class="ttl">四情境滿分率</div>
+  <div class="dek">滿分 = 撐滿 2000 步（80 秒模擬時間）· 各 60 集</div>
+  <svg viewBox="0 -10 560 260" role="img" aria-label="長條圖：clean 100%、realistic 96.7%、full 96.7%、worst 53.3%">
+<line class="grid" x1="56" y1="204.0" x2="540" y2="204.0"/>
+<text class="ax ar" x="48" y="208.0">0%</text>
+<line class="grid" x1="56" y1="157.0" x2="540" y2="157.0"/>
+<text class="ax ar" x="48" y="161.0">25%</text>
+<line class="grid" x1="56" y1="110.0" x2="540" y2="110.0"/>
+<text class="ax ar" x="48" y="114.0">50%</text>
+<line class="grid" x1="56" y1="63.0" x2="540" y2="63.0"/>
+<text class="ax ar" x="48" y="67.0">75%</text>
+<line class="grid" x1="56" y1="16.0" x2="540" y2="16.0"/>
+<text class="ax ar" x="48" y="20.0">100%</text>
+<rect class="bar s1" x="79.0" y="16.0" width="75.0" height="188.0" rx="3"><title>clean · 100.0%</title></rect>
+<text class="vlbl ac" x="116.5" y="9.0">100.0%</text>
+<text class="ax ac" x="116.5" y="224">clean</text>
+<rect class="bar s1" x="200.0" y="22.2" width="75.0" height="181.8" rx="3"><title>realistic · 96.7%</title></rect>
+<text class="vlbl ac" x="237.5" y="15.2">96.7%</text>
+<text class="ax ac" x="237.5" y="224">realistic</text>
+<rect class="bar s1" x="321.0" y="22.2" width="75.0" height="181.8" rx="3"><title>full · 96.7%</title></rect>
+<text class="vlbl ac" x="358.5" y="15.2">96.7%</text>
+<text class="ax ac" x="358.5" y="224">full</text>
+<rect class="bar s2" x="442.0" y="103.8" width="75.0" height="100.2" rx="3"><title>worst · 53.3%</title></rect>
+<text class="vlbl ac" x="479.5" y="96.8">53.3%</text>
+<text class="ax ac" x="479.5" y="224">worst</text>
+<text class="ax ac" x="298.0" y="244">評估情境（各 60 集）</text>
+  </svg>
+  <figcaption>
+    <b>realistic 是最該關注的數字</b>——它代表編碼器直連 MCU 的有線系統，也就是實際上機最可能的條件。
+    worst 情境刻意疊加所有不利因素（延遲固定 1 步、抖動 5%、摩擦鎖在上限、擾動必定發生），用來測安全邊際。
+  </figcaption>
+</figure>
+
+<h3>情境定義</h3>
+<div class="scroll">
+<table>
+  <thead><tr><th style="width:110px">情境</th><th style="width:230px">設定</th><th>用途</th></tr></thead>
+  <tbody>
+    <tr><td class="tag">clean</td><td>delay=0、alpha=0.9 固定<br>只有感測雜訊</td><td>能力上限，確認策略本身沒問題</td></tr>
+    <tr class="hl"><td class="tag">realistic</td><td>delay=0、jitter=0.02<br>其餘隨機化全開</td><td><b>最接近實際上機</b>（有線編碼器系統）</td></tr>
+    <tr><td class="tag">full</td><td>與訓練時完全相同<br>delay 隨機 (0,1)</td><td>確認在訓練分布內的表現</td></tr>
+    <tr><td class="tag">worst</td><td>delay=1 固定、jitter=0.05<br>摩擦 3.5~4N、擾動必定發生</td><td>安全邊際測試</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>完整數據</h3>
+<div class="scroll">
+<table>
+  <thead><tr><th>指標</th><th class="v">clean</th><th class="v">realistic</th><th class="v">full</th><th class="v">worst</th><th>說明</th></tr></thead>
+  <tbody>
+    <tr class="hl"><td><b>滿分率</b></td><td class="v">100.0%</td><td class="v">96.7%</td><td class="v">96.7%</td><td class="v">53.3%</td><td>撐滿 2000 步的比例</td></tr>
+    <tr><td>中位存活步數</td><td class="v">2000</td><td class="v">2000</td><td class="v">2000</td><td class="v">2000</td><td>四情境中位數皆為滿分</td></tr>
+    <tr><td>平均存活步數</td><td class="v">2000</td><td class="v">1938</td><td class="v">1943</td><td class="v">1216</td><td></td></tr>
+    <tr><td>最短存活步數</td><td class="v">2000</td><td class="v">112</td><td class="v">294</td><td class="v">8</td><td>失敗案例的嚴重程度</td></tr>
+    <tr class="hl"><td>撞邊界比例</td><td class="v">0%</td><td class="v">0%</td><td class="v">0%</td><td class="v">0%</td><td>位置終止從未觸發</td></tr>
+    <tr><td>角度 ISE / 步</td><td class="v">0.00201</td><td class="v">0.00202</td><td class="v">0.00158</td><td class="v">0.00201</td><td>四情境幾乎相同</td></tr>
+    <tr><td>穩態誤差 (rad)</td><td class="v">0.0362</td><td class="v">0.0368</td><td class="v">0.0310</td><td class="v">0.0370</td><td>約 2.1°</td></tr>
+    <tr><td>最大超調 (rad)</td><td class="v">0.1010</td><td class="v">0.1119</td><td class="v">0.1252</td><td class="v">0.1964</td><td>終止門檻 0.2</td></tr>
+    <tr><td>位置 ISE / 步</td><td class="v">0.0306</td><td class="v">0.0302</td><td class="v">0.0239</td><td class="v">0.0198</td><td></td></tr>
+    <tr><td>滑車最遠 (m)</td><td class="v">0.308</td><td class="v">0.333</td><td class="v">0.326</td><td class="v">0.370</td><td>邊界 0.9 m</td></tr>
+    <tr class="hl"><td>控制力 RMS</td><td class="v">0.162</td><td class="v">0.194</td><td class="v">0.338</td><td class="v">0.596</td><td>滿格 3.0，對應馬達發熱</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ============ 6 ============ -->
+<h2 id="s6">6. 分析</h2>
+
+<div class="card ok">
+  <h3>結論：達成「模擬中穩定平衡」的目標</h3>
+  <p style="margin-bottom:0">在最接近實際上機的 <code>realistic</code> 情境下達到 <b>96.7% 滿分率</b>，
+  且摩擦、角度零點偏移、增益誤差、外力擾動、馬達響應變異五層現實性模擬全部同時開啟。
+  這代表那些硬體缺陷模型都撐得住，可以進入下一階段。</p>
+</div>
+
+<h3>發現一：`jitter_prob` 是唯一的效能瓶頸</h3>
+<p>固定 delay=1，逐一加入單一隨機化因子的實測（40 集）：</p>
+<div class="scroll">
+<table>
+  <thead><tr><th style="width:230px">加入的因子</th><th class="v" style="width:110px">滿分率</th><th>代價</th></tr></thead>
+  <tbody>
+    <tr><td>基準（只有 delay=1）</td><td class="v">100%</td><td>—</td></tr>
+    <tr><td>+ alpha 隨機</td><td class="v">100%</td><td>0</td></tr>
+    <tr><td>+ 摩擦 0~4N</td><td class="v">100%</td><td>0</td></tr>
+    <tr><td>+ 角度 bias</td><td class="v">100%</td><td>0</td></tr>
+    <tr><td>+ 外力擾動</td><td class="v">95.0%</td><td>−5%</td></tr>
+    <tr><td>+ 增益誤差</td><td class="v">97.5%</td><td>−2.5%</td></tr>
+    <tr class="bad"><td><b>+ 指令抖動 (0.10)</b></td><td class="v"><b>17.5%</b></td><td><b>−82.5%</b></td></tr>
+  </tbody>
+</table>
+</div>
+<p>調降 <code>jitter_prob</code> 0.10 → 0.02 後重訓，訓練期 <code>ep_len_mean</code> 從 403 提升到 <b>882</b>，
+評估成績全面改善。<b>抖動與延遲會疊加</b>：delay=1 時指令已晚一步，再有機率沿用舊值等於變成延遲兩步，
+而桿件不穩定時間常數僅 202 ms、每步 40 ms，連續抖動會快速吃掉相位裕度。</p>
+
+<h3>發現二：訓練曲線嚴重低估模型能力</h3>
+<p><b>直接量測：</b>呼叫 SB3 訓練時實際使用的 <code>_sample_action()</code>，減去 <code>predict(deterministic=True)</code>，
+連續 20,000 步量得<b>實際加在馬達指令上的雜訊 std = 0.597</b>（設定值 <code>sigma=0.2</code>）。</p>
+<div class="scroll">
+<table>
+  <thead><tr><th style="width:230px">假設的雜訊量級（原始單位）</th><th class="v" style="width:130px">平均集長</th><th>對得上訓練記錄 882 嗎</th></tr></thead>
+  <tbody>
+    <tr><td>0（部署模式）</td><td class="v">2000</td><td>✗</td></tr>
+    <tr><td>0.2（直觀但錯誤）</td><td class="v">2000</td><td>✗</td></tr>
+    <tr class="hl"><td><b>0.6（正確：0.2 × 3）</b></td><td class="v"><b>986</b></td><td>✓</td></tr>
+  </tbody>
+</table>
+</div>
+<p style="font-size:.9em;opacity:.8">條件：現行 07111 模型、訓練用環境設定（所有 DR 開啟），雜訊加在 [−3, 3] 原始動作上並裁切，每列 30 集。
+剩下約 100 的差距來自 <code>ep_len_mean</code> 是最近 100 集移動平均、期間策略仍在更新。
+（舊版 jitter=0.10 模型當時的同一實驗為 1844 / 1508 / 303，對照訓練記錄 403；該模型已被覆寫，無法重現。）</p>
+<p>原因在 <code>OffPolicyAlgorithm._sample_action()</code>：先 <code>scale_action</code> 把動作正規化到 [−1, 1]、<b>雜訊加在正規化空間</b>，
+之後 <code>unscale_action</code> 才 ×3 放大回 [−3, 3]（<code>action_space = Box(-3, 3)</code>，倍率 = (high−low)/2 = 3）。
+所以寫 <code>sigma=0.2</code>，實際作用在馬達指令上的是 <b>0.6</b>——而無雜訊時策略輸出 |a| 中位數僅 0.111，<b>雜訊是輸出的 5.4 倍</b>。</p>
+<div class="card note">
+  <p style="margin:0"><b>實務結論：</b>判斷模型能力必須自己寫評估迴圈呼叫 <code>model.predict()</code>；
+  TensorBoard 的 <code>ep_len_mean</code> 只能看趨勢，不能當絕對能力。</p>
+</div>
+
+<h3>發現三：控制力餘裕充足</h3>
+<p><code>realistic</code> 情境 RMS 僅 <b>0.194</b>（滿格 3.0 = 300 N），只用了 <b>6.5%</b> 的出力。
+即使 <code>worst</code> 情境也只有 0.596（約 20%）。這代表實體上不會有過熱問題，
+而且還有大量餘裕應付模擬沒涵蓋的干擾（背隙、靜摩擦變化、纜線拉力）。</p>
+
+<h3>待處理的問題</h3>
+<div class="card warn">
+  <h3>critic_loss 上升 361.7%</h3>
+  <p style="margin-bottom:0">明確的發散警訊，是 0611 自動迴圈「學不動」判定門檻（+50%）的 7 倍。
+  雖然最終模型評估表現良好，但價值估計沒有收斂。搭配訓練曲線後段下滑 20%（峰值 1101 → 最終 882）來看，
+  <b>300K 步可能略為過度訓練</b>。下次可考慮：(a) 降低學習率，(b) 在 200K 步左右停止，
+  或 (c) 使用 <code>EvalCallback</code> 自動保存最佳模型。</p>
+</div>
+
+<div class="card note">
+  <h3>worst 情境 53.3% 偏低，且樣本數敏感</h3>
+  <p style="margin-bottom:0">同一模型在 30 集時測得 76.7%、60 集時為 53.3%——<b>小樣本不可信</b>。
+  若要寫進上機規格書，建議跑 200 集以上。此外最短存活僅 8 步，代表存在完全失控的案例，
+  需要進一步分析是哪種參數組合造成（可用 <code>dr_*</code> 指標做分組分析）。</p>
+</div>
+
+<h3>尚未模擬的實體效應</h3>
+<ul>
+  <li><b>背隙（backlash）</b>——皮帶或齒輪傳動的間隙</li>
+  <li><b>反電動勢</b>——高速時可用推力下降</li>
+  <li><b>持續性外力</b>——目前的擾動是瞬時角速度衝量，風、纜線拉力、軌道傾斜都是持續力</li>
+  <li><b>靜摩擦的速度相依性</b>——目前是固定的庫倫摩擦，真實的 Stribeck 效應更複雜</li>
+</ul>
+
+<!-- ============ 7 ============ -->
+<h2 id="s7">7. 如何執行</h2>
+
+<p>所有指令<b>一律在 <code>rl_project/</code> 目錄下執行</b>（腳本內的相對路徑以此為基準）。</p>
+
+<h3>重新訓練</h3>
+<pre><code>cd rl_project
+python experiments/machine/07111trytrain_mujoco_td3.py</code></pre>
+<p>約 13 分鐘（300K 步 @ 392 fps）。會覆寫 <code>output/models/07111.zip</code>。</p>
+
+<h3>量化評估（無視窗）</h3>
+<pre><code># 四種情境各 30 集
+python experiments/evaluation/07seriestest.py
+
+# 單一情境、更多集數（統計更穩）
+python experiments/evaluation/07seriestest.py -s realistic -n 200
+
+# 測其他模型
+python experiments/evaluation/07seriestest.py -m output/models/05114</code></pre>
+
+<h3>視覺化播放（開 MuJoCo 視窗）</h3>
+<pre><code>python experiments/evaluation/07seriestest.py -r -s realistic -n 2</code></pre>
+<p>以 25 fps 即時播放，<b>每集滿分需 80 秒</b>。建議先用 <code>-n 2</code> 測試，隨時可 <code>Ctrl+C</code> 中斷。</p>
+
+<h3>查看訓練曲線</h3>
+<pre><code>tensorboard --logdir tensorboard_logs/machine/</code></pre>
+
+<footer>
+  由 Claude Code 依 <code>experiments/machine/07111trytrain_mujoco_td3.py</code> 原始碼、
+  <code>tensorboard_logs/machine/07111_Sim2Real_DR_1/</code> 實際訓練數據，
+  以及 <code>07seriestest.py</code> 四情境各 60 集的評估結果產生 · 2026-09-28（發現二於 2026-09-30 以現行模型重測）<br>
+  檔案：<code>output/07111_complete_reference.html</code> ·
+  姊妹文件：<code>output/tensorboard_metrics_reference.html</code>、
+  <code>output/hardware_deployment_reference.html</code>（05114 時代）、
+  <code>output/experiment_diff_05111_0611.html</code>
+</footer>
+
+</div>
+</body>
+</html>

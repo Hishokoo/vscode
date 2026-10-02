@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>07111 TensorBoard 指標全解</title>
+<style>
+  :root{
+    --bg:#fbfaf8; --panel:#ffffff; --surface-1:#fcfcfb;
+    --ink:#0b0b0b; --ink-2:#52514e; --muted:#83817b;
+    --line:#e3e0da; --accent:#b4540a; --accent-soft:#fdf1e7;
+    --code-bg:#f3f1ec;
+    --series-1:#2a78d6; --series-2:#eb6834;
+    --good:#0ca30c; --critical:#d03b3b; --serious:#ec835a;
+    --good-soft:#eaf6ea; --crit-soft:#fbeaea; --warn-soft:#fdf5e3;
+    --grid:#e8e5df;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#141414; --panel:#1f1f1e; --surface-1:#1a1a19;
+      --ink:#ffffff; --ink-2:#c3c2b7; --muted:#918f87;
+      --line:#34332f; --accent:#f0924a; --accent-soft:#2a211c;
+      --code-bg:#262624;
+      --series-1:#3987e5; --series-2:#d95926;
+      --good-soft:#16261a; --crit-soft:#2c1a1a; --warn-soft:#2a2418;
+      --grid:#2e2e2b;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#141414; --panel:#1f1f1e; --surface-1:#1a1a19;
+    --ink:#ffffff; --ink-2:#c3c2b7; --muted:#918f87;
+    --line:#34332f; --accent:#f0924a; --accent-soft:#2a211c;
+    --code-bg:#262624;
+    --series-1:#3987e5; --series-2:#d95926;
+    --good-soft:#16261a; --crit-soft:#2c1a1a; --warn-soft:#2a2418;
+    --grid:#2e2e2b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);line-height:1.72;font-size:16px;
+    font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","PingFang TC",Segoe UI,sans-serif}
+  .wrap{max-width:1180px;margin:0 auto;padding:44px 22px 90px}
+  header{border-bottom:2px solid var(--ink);padding-bottom:18px;margin-bottom:12px}
+  h1{font-size:29px;margin:0 0 6px;letter-spacing:-.01em}
+  .sub{color:var(--muted);font-size:14.5px;margin:0}
+  h2{font-size:21px;margin:52px 0 14px;padding-top:20px;border-top:1px solid var(--line)}
+  h3{font-size:16px;margin:26px 0 8px;color:var(--accent)}
+  p{margin:0 0 13px}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.85em;
+    background:var(--code-bg);padding:1px 5px;border-radius:4px}
+  .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:16px 0}
+  table{border-collapse:collapse;width:100%;min-width:860px;font-size:13.5px;background:var(--panel)}
+  th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+  thead th{background:var(--accent-soft);font-weight:600;white-space:nowrap}
+  td.tag{white-space:nowrap;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;font-weight:600}
+  td.f{white-space:nowrap;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;color:var(--ink-2)}
+  td.dir{white-space:nowrap;text-align:center;font-size:12.5px}
+  tr.hl td{background:var(--good-soft)}
+  tr.bad td{background:var(--crit-soft)}
+  .hero{display:flex;flex-wrap:wrap;gap:14px;margin:20px 0}
+  .tile{flex:1 1 150px;min-width:150px;background:var(--panel);border:1px solid var(--line);
+    border-radius:8px;padding:14px 16px}
+  .tile .k{font-size:12.5px;color:var(--muted);display:block;margin-bottom:2px}
+  .tile .v{font-size:25px;font-weight:650;letter-spacing:-.02em;display:block;line-height:1.25}
+  .tile .n{font-size:12.5px;color:var(--ink-2);display:block;margin-top:2px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;
+    padding:16px 20px;margin:16px 0}
+  .card>:first-child{margin-top:0} .card>:last-child{margin-bottom:0}
+  .warn{border-left:4px solid var(--critical);background:var(--crit-soft)}
+  .warn h3{color:var(--critical)}
+  .note{border-left:4px solid var(--serious);background:var(--warn-soft)}
+  .ok{border-left:4px solid var(--good);background:var(--good-soft)}
+  .ok h3{color:var(--good)}
+  ul,ol{margin:0 0 13px;padding-left:22px} li{margin-bottom:5px}
+  figure{margin:24px 0;background:var(--surface-1);border:1px solid var(--line);
+    border-radius:8px;padding:16px 18px 10px}
+  figcaption{font-size:13px;color:var(--ink-2);margin-top:8px;line-height:1.6}
+  figure .ttl{font-size:15px;font-weight:600;margin-bottom:2px}
+  figure .dek{font-size:12.5px;color:var(--muted);margin-bottom:12px}
+  svg{display:block;width:100%;height:auto;overflow:visible}
+  .ax{font-size:11.5px;fill:var(--ink-2)} .ac{text-anchor:middle}
+  .lbl{font-size:12.5px;font-weight:600}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--ink-2);margin-bottom:8px}
+  .legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px}
+  .toc{font-size:14px;color:var(--ink-2);margin:18px 0 0}
+  .toc a{color:var(--accent);text-decoration:none;margin-right:16px;white-space:nowrap;
+    display:inline-block}
+  .toc a:hover{text-decoration:underline}
+  footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);
+    color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>07111 TensorBoard 指標全解</h1>
+  <p class="sub">28 個標籤 · 每一項的計算方式、記錄意義、判讀方向與已知陷阱</p>
+</header>
+<p class="toc">
+  <a href="#s0">總覽</a><a href="#s1">寫入時機</a><a href="#s2">控制工程指標</a>
+  <a href="#s3">領域隨機化取樣</a><a href="#s4">診斷指標</a><a href="#s5">SB3 內建</a>
+  <a href="#s6">判讀陷阱</a><a href="#s7">上機前該盯哪幾個</a>
+</p>
+
+<!-- ============ 0 ============ -->
+<h2 id="s0">總覽</h2>
+
+<div class="hero">
+  <div class="tile"><span class="k">標籤總數</span><span class="v">28</span><span class="n">實測讀回確認</span></div>
+  <div class="tile"><span class="k">自訂指標</span><span class="v">22</span><span class="n">control/ 命名空間</span></div>
+  <div class="tile"><span class="k">SB3 內建</span><span class="v">6</span><span class="n">rollout/ train/ time/</span></div>
+  <div class="tile"><span class="k">寫入頻率</span><span class="v">每集</span><span class="n">control/ 每個 episode 一筆</span></div>
+</div>
+
+<div class="scroll">
+<table>
+  <thead><tr><th>命名空間</th><th>項數</th><th>來源</th><th>寫入時機</th><th>內容</th></tr></thead>
+  <tbody>
+    <tr><td class="tag">control/</td><td>22</td><td><code>AdvancedMotorWrapper</code><br><code>ControlMetricsCallback</code></td>
+      <td>每個 episode 結束</td><td>控制工程指標 13 項、領域隨機化取樣值 5 項、診斷指標 4 項</td></tr>
+    <tr><td class="tag">rollout/</td><td>2</td><td>SB3 內建</td><td>每 4 個 episode</td>
+      <td>集長與報酬的移動平均（視窗 100 集）</td></tr>
+    <tr><td class="tag">train/</td><td>3</td><td>SB3 內建</td><td>每次梯度更新</td>
+      <td>Actor / Critic 損失、當前學習率</td></tr>
+    <tr><td class="tag">time/</td><td>1</td><td>SB3 內建</td><td>每 4 個 episode</td><td>訓練速度</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p style="font-size:14px;color:var(--muted)">
+所有 <code>control/</code> 指標都以<b>物理引擎回傳的「乾淨」觀測</b>計算，不含感測器雜訊與角度零點偏移。
+這是刻意的：bias 模擬的是「感測器讀錯」，但指標要衡量的是<b>桿子真實的狀態</b>。
+θ 代表桿件角度（弧度，垂直為 0），x 代表滑車位置（公尺，中心為 0），a 代表實際施加的控制量。
+</p>
+
+<!-- ============ 1 ============ -->
+<h2 id="s1">寫入時機：control/ 與 rollout/ 對不齊</h2>
+
+<figure>
+  <div class="ttl">兩種寫入節奏</div>
+  <div class="dek">同一段訓練實測：control/ 寫了 146 筆，rollout/ 只有 36 筆</div>
+  <div class="legend">
+    <span><i style="background:var(--series-1)"></i>control/ — 每集寫一筆</span>
+    <span><i style="background:var(--series-2)"></i>rollout/ — 每 4 集寫一筆</span>
+  </div>
+  <svg viewBox="0 0 720 170" role="img" aria-label="時序圖：control 每個 episode 寫入一次，rollout 每四個 episode 寫入一次">
+<line x1="60" y1="46" x2="690" y2="46" stroke="var(--grid)" stroke-width="1"/>
+<line x1="60" y1="106" x2="690" y2="106" stroke="var(--grid)" stroke-width="1"/>
+<text class="lbl" x="60" y="28" fill="var(--series-1)">control/</text>
+<text class="lbl" x="60" y="88" fill="var(--series-2)">rollout/</text>
+<circle cx="60"  cy="46" r="5.5" fill="var(--series-1)"/>
+<circle cx="150" cy="46" r="5.5" fill="var(--series-1)"/>
+<circle cx="240" cy="46" r="5.5" fill="var(--series-1)"/>
+<circle cx="330" cy="46" r="5.5" fill="var(--series-1)"/>
+<circle cx="420" cy="46" r="5.5" fill="var(--series-1)"/>
+<circle cx="510" cy="46" r="5.5" fill="var(--series-1)"/>
+<circle cx="600" cy="46" r="5.5" fill="var(--series-1)"/>
+<circle cx="690" cy="46" r="5.5" fill="var(--series-1)"/>
+<circle cx="330" cy="106" r="5.5" fill="var(--series-2)"/>
+<circle cx="690" cy="106" r="5.5" fill="var(--series-2)"/>
+<text class="ax ac" x="60"  y="140">ep1</text>
+<text class="ax ac" x="150" y="140">ep2</text>
+<text class="ax ac" x="240" y="140">ep3</text>
+<text class="ax ac" x="330" y="140">ep4</text>
+<text class="ax ac" x="420" y="140">ep5</text>
+<text class="ax ac" x="510" y="140">ep6</text>
+<text class="ax ac" x="600" y="140">ep7</text>
+<text class="ax ac" x="690" y="140">ep8</text>
+<text class="ax ac" x="375" y="162">episode</text>
+  </svg>
+  <figcaption>
+    <b>兩個後果。</b>其一，在同一張圖上疊加 <code>control/Episode_Length</code> 與
+    <code>rollout/ep_len_mean</code> 時，x 軸的點數密度不同，視覺上會誤判。
+    其二也更重要：<code>rollout/ep_len_mean</code> <b>不是「這 4 集的平均」，而是「最近 100 集的移動平均」</b>
+    （SB3 的 <code>stats_window_size=100</code>），所以它反應遲鈍、會平滑掉短期變化；
+    <code>control/Episode_Length</code> 則是逐集的原始值、抖動劇烈。兩者看起來不一致是正常的。
+  </figcaption>
+</figure>
+
+<!-- ============ 2 ============ -->
+<h2 id="s2">control/ — 控制工程指標（13 項）</h2>
+
+<p>這組回答「<b>桿子控制得好不好</b>」。全部在 episode 結束時一次算完。</p>
+
+<div class="scroll">
+<table>
+  <thead><tr><th style="width:170px">標籤</th><th style="width:150px">計算方式</th><th>記錄這個的意義</th><th style="width:70px">方向</th></tr></thead>
+  <tbody>
+    <tr><td class="tag">Episode_Length</td><td class="f">n</td>
+      <td>該集存活步數。<b>最直接的成敗指標</b>——桿子倒了或撞邊界就結束，撐得久代表控制住了。上限 2000 步（80 秒）。訓練初期通常只有個位數，能穩定到 2000 才算學會。</td>
+      <td class="dir">越大越好</td></tr>
+
+    <tr><td class="tag">ISE</td><td class="f">Σ θ²</td>
+      <td>誤差平方積分。平方會<b>放大大偏差的權重</b>——偏 0.1 rad 的代價是偏 0.05 rad 的四倍。用來抓「有沒有大幅晃動」。</td>
+      <td class="dir">越小越好</td></tr>
+
+    <tr><td class="tag">IAE</td><td class="f">Σ |θ|</td>
+      <td>絕對誤差積分。對所有偏差<b>一視同仁</b>，反映「總共偏離了多少」。與 ISE 並看可判斷誤差型態：ISE 高但 IAE 普通 = 偶發大晃動；兩者都高 = 長期偏著。</td>
+      <td class="dir">越小越好</td></tr>
+
+    <tr><td class="tag">ITAE</td><td class="f">Σ t·|θ|</td>
+      <td>時間加權誤差積分。越晚出現的誤差罰得越重，用來抓「<b>拖很久才修正</b>」。開局的擾動不太罰，但如果一直修不好就會急速累積。</td>
+      <td class="dir">越小越好</td></tr>
+
+    <tr class="hl"><td class="tag">ISE_per_step</td><td class="f">ISE / n</td>
+      <td rowspan="3"><b>跨版本比較請用這組。</b>上面三個原始積分值會隨 episode 變長而自然膨脹——一個撐 2000 步的好策略，ISE 反而比撐 10 步就倒的爛策略高。除以步數之後才反映「<b>平均每一步偏多少</b>」，與集長脫鉤。</td>
+      <td class="dir">越小越好</td></tr>
+    <tr class="hl"><td class="tag">IAE_per_step</td><td class="f">IAE / n</td><td class="dir">越小越好</td></tr>
+    <tr class="hl"><td class="tag">ITAE_per_step</td><td class="f">ITAE / n</td><td class="dir">越小越好</td></tr>
+
+    <tr><td class="tag">Overshoot_max_angle</td><td class="f">max |θ|</td>
+      <td>最大超調量，整集離垂直最遠的一刻。終止門檻是 0.2 rad，所以這個值<b>逼近 0.2 就代表差點失敗</b>。可視為「安全餘裕」的反指標。</td>
+      <td class="dir">越小越好</td></tr>
+
+    <tr><td class="tag">Settling_Time_steps</td><td class="f">首次 \|θ\| &lt; 0.01<br>的步數</td>
+      <td><b>舊定義，保留是為了與 05114 對照。</b>「首次進入」誤差帶——但震盪系統穿越零點時會瞬間滿足，所以數字偏樂觀。<b>未進入時記為 n</b>，因此會與 Episode_Length 混淆（見陷阱一）。</td>
+      <td class="dir">越小越好</td></tr>
+
+    <tr class="hl"><td class="tag">Settling_Time_sustained</td><td class="f">最後一次<br>\|θ\| &gt; 0.02<br>的索引 + 1</td>
+      <td><b>控制工程的正確定義</b>：此後<b>持續停留</b>在誤差帶內的最早時刻。實測差異可以很大（同一段序列舊定義給 31、新定義給 80）。全程在帶內記為 0，直到最後仍在帶外則等於 n。</td>
+      <td class="dir">越小越好</td></tr>
+
+    <tr><td class="tag">Steady_State_Error</td><td class="f">後 20% 步數的<br>mean \|θ\|</td>
+      <td>穩態誤差——收斂之後的殘餘偏差。這是<b>最接近「上機後桿子會不會微微歪著」的指標</b>。角度零點偏移（<code>dr_angle_bias</code>）會直接推高它。<b>n &lt; 5 時強制回傳 0</b>（見陷阱二）。</td>
+      <td class="dir">越小越好</td></tr>
+
+    <tr><td class="tag">RMS_Control_Effort</td><td class="f">√(mean a²)</td>
+      <td>控制力均方根，直接對應<b>馬達發熱與耗電</b>。滿格是 3.0（對應 300 N）。實測 05114 約 0.52，代表平常只用了 17% 的出力。這個值若逼近上限，代表策略在硬撐、實體上會過熱。<b>注意用的是實際施加值</b>（含延遲與抖動），不是網路原始輸出。</td>
+      <td class="dir">越小越好</td></tr>
+
+    <tr><td class="tag">Position_ISE</td><td class="f">Σ x²</td>
+      <td>車體位置誤差平方積分。防止「<b>桿子穩了但車飄走</b>」——只看角度的話，策略可以靠持續加速來平衡桿子，代價是車一路滑出去。</td>
+      <td class="dir">越小越好</td></tr>
+
+    <tr class="hl"><td class="tag">Position_ISE_per_step</td><td class="f">Position_ISE / n</td>
+      <td>同上的正規化版本，跨版本比較用這個。<b>加入摩擦隨機化後這個值必然變差</b>，但那不是策略退化（見陷阱四）。</td>
+      <td class="dir">越小越好</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ============ 3 ============ -->
+<h2 id="s3">control/ — 領域隨機化取樣值（5 項）</h2>
+
+<p>這組不評價策略好壞，而是記錄<b>「這一集抽到的是什麼樣的硬體」</b>。每集開始時抽一次、整集固定。</p>
+
+<div class="card ok">
+  <h3>它們真正的用途：當分組變數，不是看平均</h3>
+  <p style="margin-bottom:0">單看 <code>dr_friction_slide</code> 的平均值毫無意義（它就是 0–4 的均勻分布，平均必然趨近 2）。
+  價值在於<b>把它與表現指標交叉比對</b>：「摩擦 &gt; 3 N 的那些 episode，Position_ISE 是不是特別差？」
+  這才能分辨「策略不好」與「這組硬體參數本來就難」。TensorBoard 本身不支援分組，
+  需要匯出 tfevents 自己做散佈圖——<code>experiments/curriculum/0611auto_optimize_loop.py</code>
+  裡的 <code>read_tb()</code> 可以直接拿來用。</p>
+</div>
+
+<div class="scroll">
+<table>
+  <thead><tr><th style="width:170px">標籤</th><th style="width:130px">取值範圍</th><th>模擬什麼</th><th>為什麼要記</th></tr></thead>
+  <tbody>
+    <tr><td class="tag">dr_delay_steps</td><td class="f">0 或 1</td>
+      <td>控制指令延遲步數（1 步 = 40 ms）</td>
+      <td>延遲是倒立擺最致命的因素。記錄它才能驗證「delay=1 的集次是不是明顯比 delay=0 差」。</td></tr>
+
+    <tr><td class="tag">dr_alpha</td><td class="f">0.85 ~ 0.98</td>
+      <td>馬達一階響應速度。α 越大響應越快（0.85→τ≈21 ms，0.98→τ≈10 ms）</td>
+      <td>模擬馬達個體差異與溫度漂移。同時防止策略學會某個固定濾波器的精確反函數（那樣換一顆馬達就失效）。</td></tr>
+
+    <tr><td class="tag">dr_friction_slide</td><td class="f">0 ~ 4 N</td>
+      <td>滑軌乾摩擦（靜摩擦 + 庫倫摩擦）</td>
+      <td><b>最重要的一項。</b>實測 4 N 摩擦下，3 N 的小指令位移只剩無摩擦時的 8%——而平衡點附近的精修動作正好都是小指令。這是 sim-to-real 最經典的殺手。</td></tr>
+
+    <tr><td class="tag">dr_angle_bias</td><td class="f">−0.01 ~ +0.01 rad</td>
+      <td>角度感測器零點偏移（±0.57°）</td>
+      <td>模擬感測器裝歪或滑軌不水平。這是<b>常數偏移，不會像高斯雜訊那樣自己平均掉</b>，會讓策略把桿子平衡在一個歪掉的角度、導致車體持續漂移。</td></tr>
+
+    <tr><td class="tag">dr_gain_error</td><td class="f">0.85 ~ 1.15</td>
+      <td>作動器增益誤差（±15%）</td>
+      <td>模擬馬達轉矩常數公差、驅動器校正誤差、溫度導致的出力衰減。讓策略不依賴「我送 X 就會得到 X 的力」。</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ============ 4 ============ -->
+<h2 id="s4">control/ — 診斷指標（4 項）</h2>
+
+<p>這組不是控制品質，而是<b>用來偵錯與濾除污染樣本</b>。</p>
+
+<div class="scroll">
+<table>
+  <thead><tr><th style="width:170px">標籤</th><th style="width:140px">計算方式</th><th>記錄這個的意義</th></tr></thead>
+  <tbody>
+    <tr><td class="tag">initial_angle_abs</td><td class="f">\|θ<sub>0</sub>\|</td>
+      <td>開局角度。初始擾動是 ±0.15 rad，加上環境自帶的 ±0.01，所以範圍約 0~0.16。
+      <b>用途</b>：事後把「初始化就接近邊界」的困難局面單獨拿出來看。
+      （原設定是 ±0.2、與終止門檻 0.2 重疊，實測有 1.21% 的 episode 開局即死；
+      改成 ±0.15 後已無此問題，但保留這個指標以便持續監控。）</td></tr>
+
+    <tr><td class="tag">max_cart_pos_abs</td><td class="f">max \|x\|</td>
+      <td>該集滑車最遠跑到哪（公尺）。位置終止門檻是 0.9 m、硬限位 1.0 m。
+      <b>這是 rail_limit_hit 的早期預警</b>：撞邊界比例還是 0 的時候，這個值若已經在爬升，
+      代表策略正在往邊界靠。實測 05114 的最大值僅 0.547 m。</td></tr>
+
+    <tr class="hl"><td class="tag">rail_limit_hit</td><td class="f">0.0 或 1.0</td>
+      <td><b>本次新增，上機準備最該盯的指標。</b>該集是否因 \|x\| &gt; 0.9 m 而終止。
+      它的<b>平均值就是「撞邊界終止的比例」</b>。原生環境只在角度超限時終止，位置完全不在終止條件裡——
+      撞上硬限位只是被 MuJoCo 擋住、episode 照常進行。模擬裡撞牆沒有後果，實體上卻是撞限位開關或撞機構。
+      這個比例若偏高（&gt; 5%），代表策略沒學會避開邊界，<b>不能直接部署</b>。</td></tr>
+
+    <tr><td class="tag">Settling_Time_sustained</td><td class="f">見上表</td>
+      <td>雖然歸類在控制工程指標，但它同時是<b>診斷舊指標是否失真的對照組</b>。
+      兩者差距很大時，代表該集有「進了誤差帶又震盪出去」的行為。</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ============ 5 ============ -->
+<h2 id="s5">SB3 內建指標（6 項）</h2>
+
+<div class="scroll">
+<table>
+  <thead><tr><th style="width:190px">標籤</th><th style="width:120px">寫入時機</th><th>意義與判讀</th></tr></thead>
+  <tbody>
+    <tr><td class="tag">rollout/ep_len_mean</td><td>每 4 集</td>
+      <td><b>最近 100 集</b>的平均存活步數（<code>stats_window_size=100</code>）。
+      這是判斷「訓練有沒有進步」的主要曲線。因為是 100 集的移動平均，<b>反應遲鈍但穩定</b>，
+      適合看趨勢；要看單集細節請用 <code>control/Episode_Length</code>。</td></tr>
+
+    <tr class="bad"><td class="tag">rollout/ep_rew_mean</td><td>每 4 集</td>
+      <td>最近 100 集的平均總報酬。<b>絕對不可跨版本比較</b>——05111→05114 的位置懲罰權重從
+      1.0 改成 3.0 再改成 5.0，獎勵函數本身變了，分數不在同一個尺度上。
+      同一次訓練內看上升趨勢才有意義。</td></tr>
+
+    <tr><td class="tag">train/actor_loss</td><td>每次梯度更新</td>
+      <td>Actor 的損失，實質是 −Q(s, π(s)) 的平均，所以<b>數值為負、越負代表策略自認能拿到越高的 Q 值</b>。
+      它<b>不是</b>越小越好的誤差指標——單看絕對值沒有意義，要看它與 critic_loss 的搭配。</td></tr>
+
+    <tr><td class="tag">train/critic_loss</td><td>每次梯度更新</td>
+      <td>Critic 的 TD 誤差（MSE）。<b>這是判斷訓練健康度的關鍵</b>：
+      持續<b>上升</b>代表 Critic 追不上環境的複雜度、價值估計正在發散——
+      0611 自動迴圈就是用 <code>critic_trend &gt; +50%</code> 當作「學不動」的判定條件。
+      持續下降或持平代表收斂中。</td></tr>
+
+    <tr><td class="tag">train/learning_rate</td><td>每次梯度更新</td>
+      <td>當前學習率。07111 從零訓練用固定 1e-3，所以這條線應該是水平的。
+      <b>用途</b>：確認學習率真的是你以為的那個值——SB3 的 <code>load()</code> 覆寫機制有個坑，
+      optimizer 的實際值要到第一次 <code>train()</code> 才會與 schedule 同步。</td></tr>
+
+    <tr><td class="tag">time/fps</td><td>每 4 集</td>
+      <td>訓練速度（steps/秒）。實測約 385 fps，推算 300K 步約需 13 分鐘。
+      <b>用途</b>：中途突然掉速通常代表有東西不對勁（例如 episode 變長導致 wrapper 的
+      metric 陣列變大、或記憶體壓力）。</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ============ 6 ============ -->
+<h2 id="s6">判讀陷阱</h2>
+
+<div class="card warn">
+  <h3>陷阱一：Settling_Time_steps 與 Episode_Length 混淆</h3>
+  <p style="margin-bottom:0">舊定義在「整集都沒進入誤差帶」時<b>回傳 n（集長）</b>。
+  所以一個撐了 2000 步但從未穩定的 episode，Settling Time 會記成 2000；
+  而一個 5 步就倒的 episode 會記成 5——<b>看起來反而「穩定得更快」</b>。
+  這個指標必須與 <code>Episode_Length</code> 一起看，
+  或改用 <code>Settling_Time_sustained</code>（全程未穩定同樣回傳 n，但誤差帶較寬、定義較嚴謹）。</p>
+</div>
+
+<div class="card warn">
+  <h3>陷阱二：Steady_State_Error 在短 episode 會假性為 0</h3>
+  <p style="margin-bottom:0">程式碼是 <code>if n &gt;= 5 else 0.0</code>——不滿 5 步的 episode
+  <b>強制回傳 0</b>，看起來像「穩態誤差完美」，實際上是資料不足。
+  訓練初期大量 episode 只有 3~8 步，這時 <code>Steady_State_Error</code> 的平均值會被大量假 0 拉低，
+  <b>呈現出訓練在變好的假象</b>。訓練初期請忽略這個指標。</p>
+</div>
+
+<div class="card warn">
+  <h3>陷阱三：兩個 Settling Time 不可互相比較</h3>
+  <p style="margin-bottom:0"><code>Settling_Time_steps</code> 用 ±0.01 誤差帶、算「首次進入」；
+  <code>Settling_Time_sustained</code> 用 ±0.02 誤差帶、算「最後一次離開」。
+  <b>定義與閾值都不同</b>，數值沒有可比性。前者存在的唯一理由是與 05114 對照（05114 只有這個定義），
+  評估 07111 自身品質請用後者。</p>
+</div>
+
+<div class="card note">
+  <h3>陷阱四：Position_ISE 變差不一定是策略退化</h3>
+  <p style="margin-bottom:0">加入摩擦隨機化後，<code>Position_ISE</code> 幾乎<b>必然</b>變差。
+  原因：把滑車位置歸零需要精細的小出力，但小出力正好落在摩擦死區裡
+  （實測 4 N 摩擦下，3 N 指令的位移只剩無摩擦時的 8%）。
+  這是<b>你想模擬的真實效應</b>，不是 bug 也不是退化。
+  分析時請用 <code>dr_friction_slide</code> 分組，不要把所有 episode 混在一起看平均。</p>
+</div>
+
+<div class="card note">
+  <h3>陷阱五：RMS_Control_Effort 用的是實際施加值</h3>
+  <p style="margin-bottom:0">記錄的是 <code>applied_action</code>——經過低通濾波、延遲佇列、
+  以及 10% 機率的指令抖動之後<b>真正送進物理引擎的值</b>，不是網路的原始輸出。
+  所以它與獎勵裡的 <code>r_jerk</code> / <code>r_snap</code> / <code>r_smooth</code>（那三項用的是原始
+  <code>action</code>）<b>不同源</b>，交叉比對時要留意。</p>
+</div>
+
+<!-- ============ 7 ============ -->
+<h2 id="s7">上機前該盯哪幾個</h2>
+
+<p>28 個指標不必都盯。以「<b>能不能上實體機</b>」為唯一判準，優先序是：</p>
+
+<div class="scroll">
+<table>
+  <thead><tr><th style="width:60px">優先</th><th style="width:210px">指標</th><th>看什麼</th></tr></thead>
+  <tbody>
+    <tr class="hl"><td>1</td><td class="tag">control/rail_limit_hit</td>
+      <td>撞邊界終止的比例。<b>必須接近 0</b>。這個數字高就代表策略會把滑車推到機構極限——實體上直接撞壞。</td></tr>
+    <tr class="hl"><td>2</td><td class="tag">rollout/ep_len_mean</td>
+      <td>主曲線。從零訓練應該<b>單調爬升</b>（不會有續訓才有的斷崖）。若 100K 步後仍停在 50 以下，代表隨機化過強，優先調降 <code>friction_slide_range</code> 上限與 <code>jitter_prob</code>。</td></tr>
+    <tr><td>3</td><td class="tag">train/critic_loss</td>
+      <td>訓練健康度。<b>持續上升 = 發散警訊</b>，比 ep_len 更早顯現問題。</td></tr>
+    <tr><td>4</td><td class="tag">control/Steady_State_Error</td>
+      <td>最接近「上機後桿子會不會微微歪著」。但訓練初期會因假 0 失真（陷阱二），要等 ep_len 穩定後再看。</td></tr>
+    <tr><td>5</td><td class="tag">control/RMS_Control_Effort</td>
+      <td>對應馬達發熱。逼近 3.0 上限代表策略在硬撐，實體上會過熱。</td></tr>
+    <tr><td>6</td><td class="tag">control/max_cart_pos_abs</td>
+      <td>rail_limit_hit 的早期預警。撞邊界比例還是 0 時，這個值若在爬升就該注意。</td></tr>
+    <tr><td>7</td><td class="tag">control/dr_*</td>
+      <td>訓練期間不用看。<b>訓練結束後</b>拿來做分組分析，找出「哪一種硬體組合會失敗」。</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="card">
+  <h3>快速檢查指令</h3>
+  <p>啟動 TensorBoard：</p>
+  <p><code>cd rl_project &amp;&amp; tensorboard --logdir tensorboard_logs/</code></p>
+  <p style="margin-bottom:0">要做 <code>dr_*</code> 分組分析（TensorBoard 做不到），可以直接用專案裡現成的 tfevents 解析器：
+  <code>experiments/curriculum/0611auto_optimize_loop.py</code> 裡的
+  <code>read_tb()</code> 與 <code>find_tfevents()</code>，它不依賴 TensorBoard 套件、直接回傳
+  <code>{標籤: [(step, 值), ...]}</code>。</p>
+</div>
+
+<footer>
+  由 Claude Code 依 <code>experiments/machine/07111trytrain_mujoco_td3.py</code> 原始碼，
+  並實際執行訓練後讀回 tfevents 確認全部 28 個標籤 · 2026-09-24<br>
+  檔案：<code>output/tensorboard_metrics_reference.html</code> ·
+  姊妹文件：<code>output/hardware_deployment_reference.html</code>、<code>output/experiment_diff_05111_0611.html</code>
+</footer>
+
+</div>
+</body>
+</html>

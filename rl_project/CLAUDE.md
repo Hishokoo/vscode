@@ -43,22 +43,50 @@ rl_project/
 ├── tools/                     # 共用工具腳本
 │   ├── run_training.sh        # 統一訓練啟動腳本
 │   └── plot_results.py        # TensorBoard / 結果視覺化
-├── output/                    # 所有輸出（模型、圖表）統一放這
-│   └── models/                # 訓練好的 .zip 模型
-├── tensorboard_logs/          # TensorBoard 紀錄（自動生成，勿手動移動）
-│   ├── 011_Basic_DDPG_1/
-│   ├── 021_Realistic_Motor_1/
-│   └── ...
+├── prompts/                   # 從 Claude.ai 製作的提示詞存放區
+├── output/                    # 所有輸出（模型、圖表、報告）統一放這
+│   └── models/                # 訓練好的 .zip 模型（唯一存放位置，不放在腳本旁）
+├── tensorboard_logs/          # TensorBoard 紀錄，依實驗分類存放（子資料夾對應 experiments/ 分類）
+│   ├── ddpg/                  # 011~041
+│   ├── td3/                   # 05111~05114
+│   ├── evaluation/             # 05121 壓力測試
+│   ├── curriculum/            # 06111~06120
+│   └── machine/                # 07111 起
 │
-│── 011train_mujoco_ddpg.py    # 實驗 011：基礎 DDPG
-│── 012testmojoco.py
-│── 021train_mujoco_ddpg.py    # 實驗 021：加入真實馬達噪音
-│── 022testmojoco.py
-│── 031trytrain_mujoco_ddpg.py # 實驗 031：靜態穩定
-│── 041trytrain_mujoco_ddpg.py # 實驗 041：進階控制
-│── 042trytrain_mujoco_ddpg.py
-│── 043trytrain_mujoco_ddpg.py
+└── experiments/                       # 訓練/評估腳本，依實驗階段分類存放
+    ├── ddpg/                          # 011~043：DDPG 基礎系列
+    │   ├── 011train_mujoco_ddpg.py    # 實驗 011：基礎 DDPG
+    │   ├── 012testmojoco.py
+    │   ├── 021train_mujoco_ddpg.py    # 實驗 021：加入真實馬達噪音
+    │   ├── 022testmojoco.py
+    │   ├── 023testmojoco.py
+    │   ├── 031trytrain_mujoco_ddpg.py # 實驗 031：靜態穩定
+    │   ├── 032trytrain_mujoco_ddpg.py
+    │   ├── 041trytrain_mujoco_ddpg.py # 實驗 041：進階控制
+    │   ├── 042trytrain_mujoco_ddpg.py
+    │   └── 043trytrain_mujoco_ddpg.py
+    ├── td3/                           # 05111~05114：TD3 主線
+    │   ├── 05111trytrain_mujoco_td3.py
+    │   ├── 05112trytrain_mujoco_td3.py
+    │   ├── 05113trytrain_mujoco_td3.py
+    │   └── 05114trytrain_mujoco_td3.py
+    ├── evaluation/                    # 05121：純評估，不訓練
+    │   └── 05121stress_test.py        # 依 importlib 從 ../td3/ 動態載入 Wrapper
+    ├── curriculum/                    # 06111~06120：課程學習 + 自動調參迴圈
+    │   ├── 06111trytrain_mujoco_td3.py
+    │   └── 0611auto_optimize_loop.py
+    └── machine/                       # 07111 起：Sim-to-Real 領域隨機化重校
+        └── 07111trytrain_mujoco_td3.py
 ```
+
+**執行慣例（務必遵守，否則相對路徑會解析錯誤）**：所有訓練/評估腳本一律以 `rl_project/` 為工作目錄執行，例如：
+
+```bash
+cd rl_project
+python experiments/td3/05114trytrain_mujoco_td3.py
+```
+
+腳本內的模型存讀路徑（`output/models/xxx`）都是相對於這個工作目錄，與腳本自己被搬到哪個子資料夾無關。`05121stress_test.py` 是例外——它用 `__file__` 回推到 `rl_project/` 根目錄，因此不論從哪個工作目錄執行都能正確解析。
 
 ---
 
@@ -80,7 +108,8 @@ rl_project/
 ### TensorBoard log 名稱規則
 ```python
 tb_log_name = "0XX_描述"   # 對應實驗組號，例如 "021_Realistic_Motor"
-tensorboard_log = "tensorboard_logs/"
+tensorboard_log = "tensorboard_logs/<分類>/"   # 分類對應 experiments/ 底下的子資料夾
+                                                # 例如 ddpg / td3 / evaluation / curriculum / machine
 ```
 
 ---
@@ -88,8 +117,10 @@ tensorboard_log = "tensorboard_logs/"
 ## COMMON COMMANDS
 
 ```bash
-# 啟動訓練（範例）
-python 011train_mujoco_ddpg.py
+# 啟動訓練（範例；務必在 rl_project/ 目錄下執行）
+python experiments/ddpg/011train_mujoco_ddpg.py
+python experiments/td3/05114trytrain_mujoco_td3.py
+python experiments/evaluation/05121stress_test.py
 
 # 查看 TensorBoard
 tensorboard --logdir tensorboard_logs/
