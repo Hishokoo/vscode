@@ -1,0 +1,304 @@
+ㄢ<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>實驗腳本差異比較：05111 → 0611</title>
+<style>
+  :root{
+    --bg:#fbfaf8; --panel:#ffffff; --ink:#1c1b19; --muted:#6b6862;
+    --line:#e3e0da; --accent:#b4540a; --accent-soft:#fdf1e7;
+    --add:#1f7a4d; --add-soft:#e9f6ef; --del:#a32b2b; --del-soft:#fdeceb;
+    --code-bg:#f3f1ec;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#17161a; --panel:#1f1e23; --ink:#eceaf0; --muted:#a29fa9;
+      --line:#34323a; --accent:#f0924a; --accent-soft:#2a211c;
+      --add:#5ec98d; --add-soft:#1b2a22; --del:#f08a84; --del-soft:#2c1e1e;
+      --code-bg:#26252b;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#17161a; --panel:#1f1e23; --ink:#eceaf0; --muted:#a29fa9;
+    --line:#34323a; --accent:#f0924a; --accent-soft:#2a211c;
+    --add:#5ec98d; --add-soft:#1b2a22; --del:#f08a84; --del-soft:#2c1e1e;
+    --code-bg:#26252b;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","PingFang TC",Segoe UI,sans-serif;
+    line-height:1.7; font-size:16px;
+  }
+  .wrap{max-width:1180px; margin:0 auto; padding:48px 24px 96px}
+  header{border-bottom:2px solid var(--ink); padding-bottom:20px; margin-bottom:40px}
+  h1{font-size:30px; margin:0 0 8px; letter-spacing:-.01em}
+  .sub{color:var(--muted); font-size:15px; margin:0}
+  h2{
+    font-size:21px; margin:52px 0 16px; padding-top:20px;
+    border-top:1px solid var(--line);
+  }
+  h3{font-size:16px; margin:28px 0 8px; color:var(--accent)}
+  p{margin:0 0 14px}
+  code{
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.86em;
+    background:var(--code-bg); padding:1px 5px; border-radius:4px;
+  }
+  .scroll{overflow-x:auto; -webkit-overflow-scrolling:touch; margin:18px 0}
+  table{border-collapse:collapse; width:100%; min-width:860px; font-size:14px; background:var(--panel)}
+  th,td{border:1px solid var(--line); padding:9px 11px; text-align:left; vertical-align:top}
+  thead th{background:var(--accent-soft); font-weight:600; white-space:nowrap}
+  tbody th{background:var(--code-bg); font-weight:600; white-space:nowrap; width:150px}
+  td.new{background:var(--add-soft); color:var(--add); font-weight:600}
+  td.same{color:var(--muted)}
+  .pill{
+    display:inline-block; font-size:12px; padding:1px 8px; border-radius:99px;
+    border:1px solid var(--line); background:var(--code-bg); color:var(--muted);
+    white-space:nowrap;
+  }
+  .pill.train{background:var(--accent-soft); color:var(--accent); border-color:var(--accent)}
+  .pill.eval{background:var(--add-soft); color:var(--add); border-color:var(--add)}
+  .chain{
+    display:flex; flex-wrap:wrap; gap:10px; align-items:stretch; margin:24px 0 8px;
+  }
+  .node{
+    flex:1 1 150px; min-width:150px; background:var(--panel);
+    border:1px solid var(--line); border-left:3px solid var(--accent);
+    border-radius:6px; padding:12px 14px;
+  }
+  .node b{display:block; font-size:15px; margin-bottom:4px}
+  .node span{font-size:13px; color:var(--muted); display:block}
+  .card{
+    background:var(--panel); border:1px solid var(--line); border-radius:8px;
+    padding:18px 22px; margin:18px 0;
+  }
+  .card h3{margin-top:0}
+  ul{margin:0 0 14px; padding-left:22px}
+  li{margin-bottom:6px}
+  .warn{
+    border-left:3px solid var(--del); background:var(--del-soft);
+  }
+  .warn h3{color:var(--del)}
+  .tag-add{color:var(--add); font-weight:600}
+  .tag-del{color:var(--del); font-weight:600}
+  footer{margin-top:60px; padding-top:18px; border-top:1px solid var(--line);
+    color:var(--muted); font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>實驗腳本差異比較</h1>
+  <p class="sub">05111 / 05112 / 05113 / 05114 / 05121 / 06111 / 0611 — TD3 倒立擺（InvertedPendulum-v4）實驗線</p>
+</header>
+
+<h2>一、一句話總結</h2>
+
+<div class="scroll">
+<table>
+  <thead>
+    <tr><th>腳本</th><th>類型</th><th>一句話</th><th>起點模型</th><th>輸出</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>05111</code></td><td><span class="pill train">訓練</span></td>
+      <td>基線：DDPG → <b>TD3</b>，加入感測器雜訊、Snap / 移動平均平滑懲罰、8 項控制工程指標</td>
+      <td>隨機初始化</td><td><code>output/models/05111</code></td>
+    </tr>
+    <tr>
+      <td><code>05112</code></td><td><span class="pill train">訓練</span></td>
+      <td>三個小修：位置懲罰 <code>q_pos</code> 1.0→3.0、穩定門檻 0.02→0.01、指標加 per-step 正規化</td>
+      <td>隨機初始化</td><td><code>rl_project/05112</code></td>
+    </tr>
+    <tr>
+      <td><code>05113</code></td><td><span class="pill train">訓練</span></td>
+      <td><code>q_pos</code> 再加到 5.0；reset 加初始擾動；集長限 2000 步；補 <code>_on_training_end</code> 回收末集</td>
+      <td>隨機初始化</td><td><code>output/models/0513</code></td>
+    </tr>
+    <tr>
+      <td><code>05114</code></td><td><span class="pill train">訓練</span></td>
+      <td><b>Domain Randomization</b>：延遲隨機 (1,2) 混訓 + 訓練中注入外力擾動；從 05113 續訓</td>
+      <td><code>05113.zip</code></td><td><code>rl_project/05114</code></td>
+    </tr>
+    <tr>
+      <td><code>05121</code></td><td><span class="pill eval">評估</span></td>
+      <td><b>不訓練</b>。對 05114 做五項壓力測試，找發散邊界，輸出 CSV + PNG</td>
+      <td>載入 <code>05114.zip</code></td><td><code>output/stress_*.csv</code>、PNG</td>
+    </tr>
+    <tr>
+      <td><code>06111</code></td><td><span class="pill train">訓練</span></td>
+      <td><b>課程學習 Stage 1</b>：從 05113 出發，<b>純 delay=2</b> 硬練 150K 步</td>
+      <td><code>05113.zip</code></td><td><code>machinezip/06111</code></td>
+    </tr>
+    <tr>
+      <td><code>0611</code></td><td><span class="pill train">自動迴圈</span></td>
+      <td><b>Stage 2</b>：從 06111 起，自動跑 06112–06120 共 9 輪，每輪解析 tfevents 依規則 D→A→C→B→E 自動調參</td>
+      <td><code>machinezip/06111.zip</code></td><td><code>machinezip/06112…06120</code></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h2>二、血緣關係（誰接誰）</h2>
+
+<div class="chain">
+  <div class="node"><b>05111</b><span>隨機起步<br>TD3 基線</span></div>
+  <div class="node"><b>05112</b><span>獨立重訓<br>調獎勵權重</span></div>
+  <div class="node"><b>05113</b><span>獨立重訓<br>成為主幹模型</span></div>
+  <div class="node"><b>05114</b><span>← 載入 05113<br>DR 混合延遲</span></div>
+  <div class="node"><b>05121</b><span>← 評估 05114<br>不訓練</span></div>
+  <div class="node"><b>06111</b><span>← 載入 05113<br>純 delay=2</span></div>
+  <div class="node"><b>0611 loop</b><span>← 載入 06111<br>自動 9 輪</span></div>
+</div>
+
+<p>重點：<b>05111 / 05112 / 05113 是三次各自從零開始的重訓</b>，彼此不繼承權重，只是程式碼一路改進。從 <code>05114</code> 起才改成「載入既有 .zip 續訓」。<code>05114</code> 和 <code>06111</code> 是<b>同一起點（05113）的兩條平行分支</b>——05114 走「一開始就混合 delay 1/2」，06111 走「先單獨把 delay=2 練會，再混合」的課程學習路線。</p>
+
+<h2>三、逐項參數對照</h2>
+
+<div class="scroll">
+<table>
+  <thead>
+    <tr><th></th><th>05111</th><th>05112</th><th>05113</th><th>05114</th><th>06111</th><th>0611 loop</th></tr>
+  </thead>
+  <tbody>
+    <tr><th>演算法</th><td class="same">TD3</td><td class="same">TD3</td><td class="same">TD3</td><td class="same">TD3</td><td class="same">TD3</td><td class="same">TD3</td></tr>
+    <tr><th>角度懲罰 q_angle</th><td class="same">10.0</td><td class="same">10.0</td><td class="same">10.0</td><td class="same">10.0</td><td class="same">10.0</td><td class="same">10.0</td></tr>
+    <tr><th>位置懲罰 q_pos</th><td>1.0</td><td class="new">3.0</td><td class="new">5.0</td><td class="same">5.0</td><td class="same">5.0</td><td class="same">5.0</td></tr>
+    <tr><th>Settling 門檻</th><td>0.02</td><td class="new">0.01</td><td class="same">0.01</td><td class="same">0.01</td><td class="same">0.01</td><td class="same">0.01</td></tr>
+    <tr><th>reset 初始擾動</th><td>無</td><td>無</td><td class="new">qpos±0.2 rad<br>qvel±0.1 rad/s</td><td class="same">同左</td><td class="same">同左</td><td class="same">同左</td></tr>
+    <tr><th>max_episode_steps</th><td>預設</td><td>預設</td><td class="new">2000</td><td class="same">2000</td><td class="same">2000</td><td class="same">2000</td></tr>
+    <tr><th>馬達延遲 delay</th><td>固定 1</td><td>固定 1</td><td>固定 1</td><td class="new">隨機 1 或 2<br>（均勻）</td><td class="new">固定 2</td><td class="new">1 或 2<br>機率 <code>delay2_prob</code> 可調</td></tr>
+    <tr><th>訓練中外力擾動</th><td>無</td><td>無</td><td>無</td><td class="new">p=0.3<br>mag (0.1,0.3)<br>dur (2,5)</td><td class="same">p=0.3<br>mag (0.1,0.3)<br>dur (2,5)</td><td class="new">同左，且<br>每輪自動調整</td></tr>
+    <tr><th>末集回收<br><code>_on_training_end</code></th><td>無</td><td>無</td><td class="new">有（寫 <code>_final_episode</code> 標記）</td><td class="new">有（<span class="tag-del">移除</span>標記）</td><td class="same">有</td><td class="same">有</td></tr>
+    <tr><th>指標數量</th><td>8 項</td><td class="new">12 項<br>+per_step ×3<br>+Episode_Length</td><td class="new">12 項<br>+Position_ISE_per_step<br><span class="tag-del">無 Episode_Length</span></td><td class="new">13 項（全）</td><td class="same">13 項</td><td class="same">13 項</td></tr>
+    <tr><th>訓練步數</th><td class="same">150K</td><td class="same">150K</td><td class="same">150K</td><td class="same">150K</td><td class="same">150K</td><td class="new">150K × 最多 9 輪</td></tr>
+    <tr><th>TensorBoard 位置</th><td colspan="4"><code>tensorboard_logs/</code></td><td colspan="2"><code>tensorboard_machine_logs/</code></td></tr>
+  </tbody>
+</table>
+</div>
+
+<p style="font-size:14px;color:var(--muted)">模型超參數（<code>policy_delay=2</code>、<code>target_policy_noise=0.2</code>、<code>target_noise_clip=0.5</code>、<code>lr=1e-3</code>、<code>batch=256</code>、<code>buffer=200K</code>、探索雜訊 <code>sigma=0.2</code>）七支全部相同，沒有任何一支調過。</p>
+
+<h2>四、各腳本改了什麼（細節）</h2>
+
+<div class="card">
+  <h3>05111 — TD3 基線</h3>
+  <p>相對於前一代 <code>041</code>（DDPG）的升級：</p>
+  <ul>
+    <li>演算法換成 TD3：雙 Critic、Target Policy Smoothing、Actor 延遲更新</li>
+    <li><code>AdvancedMotorWrapper</code> 新增：感測器雜訊（<code>obs_noise_std=0.01</code>）、Snap 二階差分懲罰、移動平均偏差懲罰</li>
+    <li>建立 8 項控制工程指標：ISE / IAE / ITAE / 超調量 / 穩定時間 / 穩態誤差 / RMS 控制力 / Position_ISE</li>
+    <li>獎勵含「穩態死區超級獎勵」：角度穩 +2.0，車體也穩再 +5.0；最後 clip 到 [-5, 10]</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h3>05112 — 三個小修</h3>
+  <ul>
+    <li><b>修改一</b>：<code>q_pos</code> 1.0 → 3.0，加強對車體偏移的懲罰</li>
+    <li><b>修改二</b>：Settling Time 判定門檻 0.02 → 0.01，避免指標太鬆而失去意義</li>
+    <li><b>修改三</b>：新增 <code>ISE_per_step</code> / <code>IAE_per_step</code> / <code>ITAE_per_step</code> 與 <code>Episode_Length</code>，排除「集數越長累積指標越大」的膨脹效應</li>
+  </ul>
+  <p>環境與訓練設定完全沿用 05111。</p>
+</div>
+
+<div class="card">
+  <h3>05113 — 主幹模型（後面兩條線都從這裡分岔）</h3>
+  <ul>
+    <li><code>q_pos</code> 3.0 → <b>5.0</b>，說明是為了壓制「Position ISE 後段暴增」</li>
+    <li><b>reset 加初始擾動</b>：<code>qpos[1] ±0.2 rad</code>、<code>qvel[1] ±0.1 rad/s</code>，讓 Settling Time 有真正的收斂過程可量</li>
+    <li><code>max_episode_steps=2000</code>：縮短單集，讓 TensorBoard 後段有足夠紀錄點</li>
+    <li>新增 <code>_on_training_end</code>：訓練結束時把還沒結束的最後一集強制算完寫入 TB，避免資料遺失</li>
+    <li>指標新增 <code>Position_ISE_per_step</code>（但這版<b>沒有</b> <code>Episode_Length</code>，05114 才補回）</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h3>05114 — Domain Randomization（05113 的續訓）</h3>
+  <p>第一支「不從零開始」的腳本，<code>TD3.load("rl_project/05113")</code> 接手權重。Wrapper 新增兩組 DR 機制：</p>
+  <ul>
+    <li><b>延遲隨機化</b>：每集重抽 <code>delay_steps ∈ {1,2}</code> 並重建 <code>action_queue</code>。註解寫明原本試過 1~4，Critic 無法收斂才縮到 1~2</li>
+    <li><b>外力擾動</b>：每集 30% 機率生成擾動計畫（起始步 50–300、持續 2–5 步、量值 0.1–0.3、隨機方向），在 step 中<b>跨步分散</b>施加角速度衝量。註解寫明原本 mag (0.3,0.8) / dur (3,8) 太強（等效最高 6.4 rad/s）才調小</li>
+    <li>觀測空間刻意維持 5 維以與 05113 權重相容（沒有把 delay 值放進 obs）</li>
+    <li>指標補齊 <code>Episode_Length</code>，共 13 項；<code>_on_training_end</code> 不再寫 <code>_final_episode</code> 標記</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h3>05121 — 壓力測試（唯一不訓練的腳本）</h3>
+  <p>用 <code>importlib</code> 反過來 import <code>05114trytrain_mujoco_td3</code> 的 Wrapper，載入 <code>05114.zip</code> 做純評估。測試時 <code>obs_noise_enable=False</code>（排除感測器變因），每個設定跑 50 集、每集上限 2000 步，通過門檻為平均存活 ≥ 1900 步：</p>
+  <ul>
+    <li><b>測試一</b>　馬達延遲掃描：delay = 1…10</li>
+    <li><b>測試二</b>　初始推力干擾：0.0 → 3.0（步進 0.3）</li>
+    <li><b>測試三</b>　系統質量浮動：70% → 130%（步進 5%）</li>
+    <li><b>測試四 A</b>　固定力 0.5，掃描擾動時長 1/5/10/20/30 步 → 量恢復步數與恢復率</li>
+    <li><b>測試四 B</b>　固定時長 5 步，掃描力大小 0.1 → 2.0</li>
+  </ul>
+  <p>輸出：5 個 CSV、六宮格 PNG、TensorBoard scalars，並列印「發散邊界分析報告」。</p>
+</div>
+
+<div class="card">
+  <h3>06111 — 課程學習 Stage 1</h3>
+  <p>和 05114 一樣從 <code>05113.zip</code> 出發，但策略相反：<b>不混合，先把 delay=2 單獨練會</b>（<code>delay_steps=2, delay_randomize=False</code>），目的是「產生足夠的 delay=2 存活樣本」。外力擾動設定與 05114 完全相同。</p>
+  <ul>
+    <li>Wrapper 新增 <code>delay2_prob</code> 參數（本階段沒用到，是為 Stage 2 預留）</li>
+    <li>延遲隨機化改用 <code>np.random.choice([1,2], p=[1-delay2_prob, delay2_prob])</code>，可控偏重，而非 05114 的均勻 <code>randint</code></li>
+    <li>輸出改到獨立目錄 <code>machinezip/</code> 與 <code>tensorboard_machine_logs/</code>，與人工實驗線分開</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h3>0611auto_optimize_loop — Stage 2 自動調參迴圈</h3>
+  <p>Wrapper 與 Callback 和 06111 <b>完全一致</b>，差別全在主程式：從 <code>machinezip/06111</code> 起連跑 06112 → 06120，每輪 150K 步，跑完自己讀 tfevents 決定下一輪參數。</p>
+  <p><b>自建 tfevents 解析器</b>：手寫 varint / protobuf 解碼（<code>read_varint</code>、<code>parse_event</code>、<code>read_tb</code>），不依賴 TensorBoard 套件，直接抓 <code>control/Episode_Length</code>、<code>train/critic_loss</code>、<code>control/ISE_per_step</code>、<code>control/Steady_State_Error</code>。</p>
+  <p><b>判讀指標</b>：short_ratio（&lt;50 步佔比）、dist_ratio（50–300 步）、long_ratio（≥300 步）、critic_loss 前後 1/4 的相對趨勢。</p>
+  <p><b>調參規則</b>（依序判斷，先中先套）：</p>
+  <ul>
+    <li><b>停止條件</b>：<code>short_ratio &lt; 15%</code> → 收工</li>
+    <li><b>規則 D</b>　critic_trend &gt; +50%：學不動 → <code>delay2_prob</code> 與 <code>disturbance_probability</code> 各 −0.05（下限 0.2）</li>
+    <li><b>規則 A</b>　short_ratio &gt; 40%：死太快 → <code>delay2_prob</code> −0.05</li>
+    <li><b>規則 C</b>　dist_ratio &gt; 25%：卡在中段 → 擾動上限 −0.05、持續步數上限 −1</li>
+    <li><b>規則 B</b>　short_ratio ≤ 40% 且 dist_ratio &lt; 10%：太輕鬆 → <code>disturbance_probability</code> +0.05（上限 0.5）</li>
+    <li><b>規則 E</b>　以上皆非 → 維持不變</li>
+  </ul>
+  <p>從 <code>machinezip/</code> 現有 06112–06119 可看出迴圈實際跑了 8 輪（06120 未產出），代表在第 8 輪時中止或收斂。</p>
+</div>
+
+<h2>五、幾個要注意的不一致</h2>
+
+<div class="card warn">
+  <h3>命名與路徑對不上</h3>
+  <ul>
+    <li><code>05113</code> 檔頭註解寫的是 <code>051trytrain_mujoco_td3.py</code>，內文說「相較於 041」，但實際內容是相較於 05112；<code>tb_log_name="0513_Advanced_control"</code>（少一個 1），模型存成 <code>output/models/0513</code> — 然而磁碟上實際是 <code>tensorboard_logs/05113_Advanced_control_1/</code> 與 <code>rl_project/05113.zip</code>，表示跑的時候和現在的程式碼不一致。</li>
+    <li><code>05114</code> 檔頭寫「相較於 05114 舊版」，應為 05113。</li>
+    <li><code>05121</code> 檔頭寫「05103 模型壓力測試」，實際測的是 05114。<code>LOG_DIR</code> 指向 <code>tensorboard_test_logs/05121_stress_test</code>，但磁碟上是 <code>tensorboard_test_logs_05121/05114_stress_test/</code>。</li>
+  </ul>
+</div>
+
+<div class="card warn">
+  <h3>模型輸出路徑違反 CLAUDE.md</h3>
+  <p>規定是「輸出一律進 <code>output/models/</code>」，但實際四支訓練腳本各存各的：05111 → <code>output/models/05111</code>、05112 → <code>rl_project/05112</code>、05113 → <code>output/models/0513</code>、05114 → <code>rl_project/05114</code>。磁碟上 <code>output/models/</code> 根本不存在，所有 <code>.zip</code> 都躺在 <code>rl_project/</code> 根目錄。之後要重跑或做比較時，<code>TD3.load("rl_project/05113")</code> 這類硬寫路徑會是第一個爆的地方。</p>
+</div>
+
+<div class="card warn">
+  <h3>Wrapper 重複複製</h3>
+  <p><code>AdvancedMotorWrapper</code> 與 <code>ControlMetricsCallback</code> 在七支檔案裡各複製一份（06111 與 0611 的版本逐字相同）。CLAUDE.md 的「NEVER copy-paste code blocks — extract into <code>tools/</code>」正是指這個。05121 已經示範了解法：用 <code>importlib</code> 從訓練腳本引入 Wrapper，而不是再抄一份。</p>
+</div>
+
+<h2>六、實驗設計上的主線</h2>
+<p>把命名雜訊拿掉，這七支其實只在推進三件事：</p>
+<ul>
+  <li><b>獎勵塑形</b>（05111 → 05112 → 05113）：位置懲罰 1.0 → 3.0 → 5.0，加上指標正規化與更嚴格的穩定門檻，讓「看起來穩」變成「量得出來穩」。</li>
+  <li><b>強健性</b>（05113 → 05114 / 06111）：把固定 delay=1 的理想條件，換成延遲不確定 + 外力擾動的真實條件。兩條路線並存：一次到位混訓（05114）vs. 課程學習（06111 → 0611）。</li>
+  <li><b>自動化</b>（05121 → 0611）：先有可量化的壓力測試找出邊界，再把「看指標 → 調參 → 重訓」這個人工迴圈寫成程式自己跑。</li>
+</ul>
+
+<footer>
+  由 Claude Code 依 <code>rl_project/</code> 原始碼產生 · 2026-09-22 · 檔案：<code>output/experiment_diff_05111_0611.html</code>
+</footer>
+
+</div>
+</body>
+</html>

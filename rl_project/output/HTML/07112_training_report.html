@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>07112 訓練報告</title>
+<style>
+  :root{
+    --bg:#fbfaf8; --panel:#ffffff; --ink:#0b0b0b; --ink-2:#52514e; --muted:#83817b;
+    --line:#e3e0da; --accent:#b4540a; --accent-soft:#fdf1e7; --code-bg:#f3f1ec;
+    --series-1:#2a78d6; --series-2:#eb6834;
+    --good:#0ca30c; --critical:#d03b3b; --warn:#c98a00;
+    --good-soft:#eaf6ea; --crit-soft:#fbeaea; --warn-soft:#fdf5e3;
+    --grid:#e8e5df; --ref:#83817b;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#141414; --panel:#1f1f1e; --ink:#ffffff; --ink-2:#c3c2b7; --muted:#918f87;
+      --line:#34332f; --accent:#f0924a; --accent-soft:#2a211c; --code-bg:#262624;
+      --series-1:#3987e5; --series-2:#d95926;
+      --good-soft:#16261a; --crit-soft:#2c1a1a; --warn-soft:#2a2418;
+      --grid:#2e2e2b; --ref:#918f87;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#141414; --panel:#1f1f1e; --ink:#ffffff; --ink-2:#c3c2b7; --muted:#918f87;
+    --line:#34332f; --accent:#f0924a; --accent-soft:#2a211c; --code-bg:#262624;
+    --series-1:#3987e5; --series-2:#d95926;
+    --good-soft:#16261a; --crit-soft:#2c1a1a; --warn-soft:#2a2418;
+    --grid:#2e2e2b; --ref:#918f87;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);line-height:1.72;font-size:16px;
+    font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","PingFang TC",Segoe UI,sans-serif}
+  .wrap{max-width:1100px;margin:0 auto;padding:44px 16px 90px}
+  header{border-bottom:2px solid var(--ink);padding-bottom:18px;margin-bottom:12px}
+  h1{font-size:29px;margin:0 0 6px;letter-spacing:-.01em}
+  .sub{color:var(--muted);font-size:14.5px;margin:0}
+  h2{font-size:21px;margin:52px 0 14px;padding-top:20px;border-top:1px solid var(--line)}
+  h3{font-size:16px;margin:26px 0 8px;color:var(--accent)}
+  p{margin:0 0 13px}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.85em;background:var(--code-bg);padding:1px 5px;border-radius:4px}
+  .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:16px 0}
+  table{border-collapse:collapse;width:100%;font-size:13.5px;background:var(--panel)}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  thead th{background:var(--accent-soft);font-weight:600;white-space:nowrap}
+  td.v,th.v{white-space:nowrap;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;text-align:right;font-variant-numeric:tabular-nums}
+  td.tag{white-space:nowrap;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;font-weight:600}
+  tr.hl td{background:var(--good-soft)}
+  .hero{display:flex;flex-wrap:wrap;gap:14px;margin:20px 0}
+  .tile{flex:1 1 180px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+  .tile .k{font-size:12.5px;color:var(--muted);display:block}
+  .tile .val{font-size:25px;font-weight:650;letter-spacing:-.02em;display:block;line-height:1.3;font-variant-numeric:tabular-nums}
+  .tile .n{font-size:12.5px;color:var(--ink-2);display:block}
+  .callout{border-left:4px solid var(--accent);background:var(--accent-soft);padding:12px 16px;border-radius:0 6px 6px 0;margin:16px 0}
+  .callout.crit{border-color:var(--critical);background:var(--crit-soft)}
+  .callout.good{border-color:var(--good);background:var(--good-soft)}
+  .badge{display:inline-block;font-size:12px;font-weight:600;padding:1px 8px;border-radius:10px;white-space:nowrap}
+  .badge.crit{color:var(--critical);background:var(--crit-soft)}
+  .badge.warn{color:var(--warn);background:var(--warn-soft)}
+  .badge.good{color:var(--good);background:var(--good-soft)}
+  .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:18px}
+  .chart{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 14px 8px;position:relative}
+  .chart h4{margin:0 0 2px;font-size:14.5px}
+  .chart .cap{font-size:12.5px;color:var(--muted);margin:0 0 6px}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:var(--ink-2);margin:4px 0 2px}
+  .legend i{display:inline-block;width:16px;height:0;border-top:2px solid;vertical-align:middle;margin-right:5px}
+  .legend i.dash{border-top-style:dashed}
+  svg{display:block;width:100%;height:auto;overflow:visible}
+  svg text{font-size:11px;fill:var(--muted);font-family:inherit}
+  .tip{position:absolute;pointer-events:none;background:var(--panel);border:1px solid var(--line);border-radius:6px;
+    padding:6px 9px;font-size:12px;line-height:1.5;box-shadow:0 2px 8px rgba(0,0,0,.12);display:none;white-space:nowrap;z-index:5}
+  .tip b{font-variant-numeric:tabular-nums}
+  .tip .sw{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+  ul{padding-left:22px;margin:0 0 13px} li{margin:3px 0}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>07112 訓練報告：IP570 系統識別模型 + TD3</h1>
+  <p class="sub">腳本 <code>experiments/machine/07112trytrain_mujoco_td3.py</code> · TensorBoard <code>07112_IP570_SysID_1</code> · 300K 步、seed 0、約 13 分鐘（385 fps）· 報告產生於 2026-10-11</p>
+</header>
+
+<div class="callout crit">
+  <b>結論：會平衡，但滑車還在搖，依腳本自訂的判準應進入 07113（residual RL）。</b><br>
+  名目模型下 RL 的滑車尾段 x 標準差 <b>7.61 cm</b>，同環境 LQI 只有 <b>1.24 cm</b>，差 <b>6.1 倍</b>（門檻 2 倍）。
+  且這個差距沒有隨訓練收斂：75K 時是 4.66 cm，300K 反而變大。角度端則接近（θ std 0.0143 vs 0.0085 rad，1.7 倍）。
+</div>
+
+<div class="hero">
+  <div class="tile"><span class="k">名目模型跑滿 20 s</span><span class="val">5 / 5</span><span class="n">RL 與 LQI 都是 100%</span></div>
+  <div class="tile"><span class="k">全開 DR 跑滿 20 s</span><span class="val">4 / 5</span><span class="n">RL 1 集倒擺 · LQI 1 集撞軟限</span></div>
+  <div class="tile"><span class="k">滑車 x std（名目，尾段）</span><span class="val">7.61 cm</span><span class="n">LQI 1.24 cm · 6.1×</span></div>
+  <div class="tile"><span class="k">評估 return（名目）</span><span class="val">2,690</span><span class="n">LQI 5,349 · 50%</span></div>
+</div>
+
+<h2>1. 這一版做了什麼</h2>
+<p>07112 不再沿用 <code>InvertedPendulum-v4</code>，而是依 IP570 規格表自寫 MuJoCo 模型從零訓練。和 05114 / 07111 的壓力測試比較基準就此斷開，改用同環境內的 LQI 當基準。</p>
+<div class="scroll"><table>
+<thead><tr><th>項目</th><th>07111</th><th>07112</th></tr></thead>
+<tbody>
+<tr><td>被控體</td><td>InvertedPendulum-v4 + DR</td><td>自寫 IP570 模型（擺桿 0.39 m、滑軌 ±0.1925 m）</td></tr>
+<tr><td>動作</td><td>力 ±300 N + α 低通</td><td>PWM duty ∈ [−1, 1]，電壓致動器 F = K<sub>F</sub>·duty − B·ẋ（反電動勢由物理產生）</td></tr>
+<tr><td>控制頻率</td><td>25 Hz</td><td>50 Hz（timestep 2 ms × 10 子步，implicitfast）</td></tr>
+<tr><td>觀測</td><td>5 維 + VecNormalize</td><td>6 維 [x, θ, ẋ, θ̇, u_applied, ∫x]，固定縮放（ObservationBuilder，上機共用）</td></tr>
+<tr><td>感測</td><td>真實速度加高斯雜訊</td><td>編碼器 1040 count/rev 量化、電位器 12-bit ADC ×8 平均、速度由差分 + 低通</td></tr>
+<tr><td>通訊</td><td>整步延遲 0/1</td><td>子步延遲 2–10 ms、掉幀 2%</td></tr>
+<tr><td>獎勵</td><td>階梯 bonus +2/+5</td><td>二次項 + Cauchy 連續位能井 + 作用在 u 的 jerk/snap 懲罰</td></tr>
+<tr><td>γ</td><td>0.99</td><td>0.995（50 Hz 下維持約 4 秒視野）</td></tr>
+<tr><td>終止</td><td>rail 0.9</td><td>|θ| &gt; 0.2 rad 或 |x| &gt; 0.15 m</td></tr>
+</tbody></table></div>
+
+<h2>2. 訓練過程</h2>
+<div class="grid2">
+  <div class="chart" id="c-len"><h4>平均集長（rollout/ep_len_mean）</h4><p class="cap">訓練環境（全開 DR + 探索雜訊）。1000 步 = 跑滿 20 s</p></div>
+  <div class="chart" id="c-rew"><h4>平均集報酬（rollout/ep_rew_mean）</h4><p class="cap">訓練環境，含探索雜訊</p></div>
+</div>
+<p>集長在約 160K 步時爬到 900+ 後持平；報酬持續緩升至 2,298。ep_len 在最後 50K 從 943 降到 844，對應探索雜訊降到 0.05、學習率降到 3e-4 的階段，沒有帶來改善。</p>
+
+<h2>3. 定期評估（每 25K 步，deterministic，固定種子各 5 集）</h2>
+<div class="grid2">
+  <div class="chart" id="c-ret"><h4>評估 return</h4><p class="cap">實線 RL，虛線 LQI（同一批種子，不隨訓練變）</p></div>
+  <div class="chart" id="c-xstd"><h4>滑車尾段 x 標準差（cm）</h4><p class="cap">後 50% 的 x 標準差，越低越好</p></div>
+  <div class="chart" id="c-tstd"><h4>擺角尾段 θ 標準差（mrad）</h4><p class="cap">後 50% 的 θ 標準差，越低越好</p></div>
+  <div class="chart" id="c-zc"><h4>擺角過零頻率（Hz）</h4><p class="cap">後 50% 的 θ 過零頻率，越低代表搖得越慢</p></div>
+</div>
+
+<h3>名目模型逐點數據</h3>
+<div class="scroll"><table id="t-nom"></table></div>
+<h3>全開 DR 逐點數據</h3>
+<div class="scroll"><table id="t-dr"></table></div>
+<p style="font-size:13.5px;color:var(--ink-2)">綠底列 = 07112_best.zip 存檔點（依 eval_dr return 最高，<b>100K 步</b>）。</p>
+
+<h2>4. 最終模型 vs LQI 基準（300K）</h2>
+<div class="scroll"><table>
+<thead><tr><th>指標</th><th class="v">RL 名目</th><th class="v">LQI 名目</th><th class="v">倍數</th><th class="v">RL DR</th><th class="v">LQI DR</th><th class="v">倍數</th><th>判讀（名目）</th></tr></thead>
+<tbody id="t-cmp"></tbody></table></div>
+
+<div class="callout">
+  <b>關於 07112_best.zip（100K）：</b>它是 DR return 最高的點（2,875），名目 x std 4.85 cm、是 LQI 的 3.9 倍，比最終模型好，但仍超過 2 倍門檻。
+  評估每組只有 5 集，「4/5 跑滿」與「5/5」之間只差 1 集，存檔點的選擇帶有不小的雜訊。
+</div>
+
+<h2>5. 被控體與感測參數</h2>
+<h3>名目物理參數（<code>PLANT_NOMINAL</code>）與 DR 範圍</h3>
+<p style="font-size:13.5px;color:var(--ink-2)">來源標記：[規] 規格表、[推] 由規格推導、[估] 規格未給、依材質或類比估算。到貨後依量測逐項換成實測值。</p>
+<div class="scroll"><table>
+<thead><tr><th>參數</th><th class="v">名目值</th><th class="v">DR 範圍</th><th>單位</th><th>來源</th><th>說明</th></tr></thead>
+<tbody>
+<tr><td class="tag">pulley_r</td><td class="v">0.012</td><td class="v">0.010 – 0.014</td><td>m</td><td>[估]</td><td>同步輪節圓半徑。⚠️ 到貨第一個量</td></tr>
+<tr><td class="tag">J_motor</td><td class="v">1.3e-6</td><td class="v">0.8e-6 – 2.2e-6（log）</td><td>kg·m²</td><td>[估]</td><td>520 級轉子 + 減速箱，折算到馬達軸</td></tr>
+<tr><td class="tag">gear_N</td><td class="v">20</td><td class="v">—</td><td>—</td><td>[規]</td><td>減速比 1:20</td></tr>
+<tr><td class="tag">Kt_out</td><td class="v">0.17</td><td class="v">0.14 – 0.23</td><td>N·m/A</td><td>[推]</td><td>η·Ke_out（η≈0.85）</td></tr>
+<tr><td class="tag">Ke_out</td><td class="v">0.197</td><td class="v">0.187 – 0.207</td><td>V·s/rad</td><td>[推]</td><td>無載轉速 549 rpm 推得</td></tr>
+<tr><td class="tag">R_total</td><td class="v">4.8</td><td class="v">4.3 – 5.5</td><td>Ω</td><td>[推]</td><td>12 V / 2.8 A + 驅動導通電阻</td></tr>
+<tr><td class="tag">V_supply</td><td class="v">12.0</td><td class="v">11.4 – 12.3</td><td>V</td><td>[規]</td><td></td></tr>
+<tr><td class="tag">m_cart</td><td class="v">0.20</td><td class="v">0.15 – 0.30</td><td>kg</td><td>[估]</td><td>滑塊 + 軸承 + 電位器 + 皮帶夾</td></tr>
+<tr><td class="tag">m_rod</td><td class="v">0.062</td><td class="v">0.03 – 0.10</td><td>kg</td><td>[估]</td><td>不鏽鋼 ⌀5 × 0.39 m；材質未確認所以放寬</td></tr>
+<tr><td class="tag">m_hub</td><td class="v">0.012</td><td class="v">0.005 – 0.02</td><td>kg</td><td>[估]</td><td>擺桿夾頭</td></tr>
+<tr><td class="tag">pole_L</td><td class="v">0.39</td><td class="v">—</td><td>m</td><td>[規]</td><td>轉軸到頂端</td></tr>
+<tr><td class="tag">Fc_cart</td><td class="v">2.5</td><td class="v">1.0 – 5.0</td><td>N</td><td>[推]</td><td>滑車庫倫摩擦</td></tr>
+<tr><td class="tag">b_cart</td><td class="v">0.0</td><td class="v">0.0 – 5.0</td><td>N·s/m</td><td>[估]</td><td>反電動勢以外的黏滯阻尼</td></tr>
+<tr><td class="tag">hinge_fric</td><td class="v">3e-4</td><td class="v">0 – 1e-3</td><td>N·m</td><td>[規]</td><td>WDD35D4 起動力矩 ≤ 1e-3</td></tr>
+<tr><td class="tag">hinge_damp</td><td class="v">5e-5</td><td class="v">0 – 2e-4</td><td>N·m·s</td><td>[估]</td><td></td></tr>
+</tbody></table></div>
+
+<h3>推導量（名目）</h3>
+<div class="scroll"><table>
+<thead><tr><th>量</th><th class="v">值</th><th>公式 / 意義</th></tr></thead>
+<tbody>
+<tr><td class="tag">K_F</td><td class="v">35.4 N/duty</td><td>V·Kt / (R·r)</td></tr>
+<tr><td class="tag">B</td><td class="v">48.5 N·s/m</td><td>Kt·Ke / (R·r²)，反電動勢阻尼</td></tr>
+<tr><td class="tag">armature</td><td class="v">3.61 kg</td><td>J·N² / r²，轉子慣量折算到滑車，約滑車本體 18 倍</td></tr>
+<tr><td class="tag">v_free</td><td class="v">0.73 m/s</td><td>K_F / B，滿 duty 穩態速度</td></tr>
+<tr><td class="tag">τ_mech</td><td class="v">80 ms</td><td>m_eq / B，比 20 ms 控制週期長 → 滑車是「慢速度源」</td></tr>
+<tr><td class="tag">m_pole / lc</td><td class="v">74 g / 163 mm</td><td>擺質量 / 質心到轉軸距離</td></tr>
+<tr><td class="tag">I_pivot</td><td class="v">3.14e-3 kg·m²</td><td>對轉軸轉動慣量</td></tr>
+<tr><td class="tag">不穩定極點</td><td class="v">≈ 6.14 rad/s</td><td>√(m·g·lc / I_pivot)</td></tr>
+<tr><td class="tag">m/count</td><td class="v">72.5 µm</td><td>2πr / 1040</td></tr>
+<tr><td class="tag">θ 量化</td><td class="v">1.47 mrad</td><td>345° 電氣轉角 / 4095</td></tr>
+</tbody></table></div>
+
+<h3>感測、通訊、擾動、初始條件</h3>
+<div class="scroll"><table>
+<thead><tr><th>項目</th><th>名目</th><th>DR</th></tr></thead>
+<tbody>
+<tr><td class="tag">angle_bias</td><td>0</td><td>±0.01 rad（零點校正殘差）</td></tr>
+<tr><td class="tag">angle_scale</td><td>1.0</td><td>0.99 – 1.01</td></tr>
+<tr><td class="tag">adc_noise</td><td>1.0 count</td><td>0.5 – 3.0 count（單次取樣 σ，每拍 8 次平均）</td></tr>
+<tr><td class="tag">enc_cal</td><td>1.0</td><td>0.99 – 1.01</td></tr>
+<tr><td class="tag">latency</td><td>6 ms</td><td>2 – 10 ms（子步延遲）</td></tr>
+<tr><td class="tag">drop_prob</td><td>0</td><td>2%（MCU 沿用上一拍 duty）</td></tr>
+<tr><td class="tag">擾動</td><td colspan="2">機率 0.3，第 100–750 步，持續 2–5 步，Δθ̇ 0.3–1.0 rad/s（模擬敲擺頂）</td></tr>
+<tr><td class="tag">初始條件</td><td colspan="2">|x| ≤ 0.03 m、|θ| ≤ 0.10 rad、|θ̇| ≤ 0.2 rad/s</td></tr>
+<tr><td class="tag">觀測縮放</td><td colspan="2">x 0.15、θ 0.2、ẋ 0.5、θ̇ 2.0、∫x 0.3（∫x 夾限 ±0.3），速度低通 α = 0.715</td></tr>
+</tbody></table></div>
+
+<h2>6. 獎勵與訓練超參數</h2>
+<div class="grid2">
+<div class="scroll" style="margin:0"><table>
+<thead><tr><th>獎勵項</th><th class="v">值</th></tr></thead>
+<tbody>
+<tr><td>q_θ / q_x / q_θ̇ / q_ẋ</td><td class="v">10 / 20 / 0.5 / 0.1</td></tr>
+<tr><td>r_u / r_jerk / r_snap</td><td class="v">0.05 / 0.2 / 0.1</td></tr>
+<tr><td>bonus_upright / bonus_center</td><td class="v">2 / 5</td></tr>
+<tr><td>σ_θ / σ_θ̇ / σ_x / σ_ẋ</td><td class="v">0.02 / 0.1 / 0.03 / 0.1</td></tr>
+<tr><td>位能井形式</td><td class="v">Cauchy</td></tr>
+<tr><td>每步獎勵 clip</td><td class="v">[−5, 10]</td></tr>
+</tbody></table></div>
+<div class="scroll" style="margin:0"><table>
+<thead><tr><th>TD3 超參數</th><th class="v">值</th></tr></thead>
+<tbody>
+<tr><td>total_timesteps / seed</td><td class="v">300,000 / 0</td></tr>
+<tr><td>γ</td><td class="v">0.995</td></tr>
+<tr><td>learning_rate</td><td class="v">1e-3 → (70%) → 3e-4</td></tr>
+<tr><td>action noise σ</td><td class="v">0.2 → (60–90%) → 0.05</td></tr>
+<tr><td>batch / buffer</td><td class="v">256 / 200,000</td></tr>
+<tr><td>policy_delay / target noise / clip</td><td class="v">2 / 0.2 / 0.5</td></tr>
+<tr><td>網路</td><td class="v">SB3 預設 MlpPolicy</td></tr>
+</tbody></table></div>
+</div>
+<p style="margin-top:14px">LQI 增益 K（z = [x, θ, ẋ, θ̇, u_applied, ∫x]，u = −K z）：<br><code>[-6.109, -11.854, -4.823, -1.978, -0.059, -2.307]</code></p>
+
+<h2>7. 判讀與下一步</h2>
+<ul>
+  <li><b>角度控制已過關，位置控制沒有。</b>θ std 與 LQI 差 1.7 倍、過零 1.1 Hz vs 0.44 Hz；但 x std 6.1 倍、最大位移 12.1 cm vs 2.9 cm（軟限 15 cm），實機上會頻繁接近限位。</li>
+  <li><b>偏移不是主因。</b>尾段 x 平均偏移只有 0.6 cm（∫x 那一維有作用），x 的問題是來回搖擺，不是漂移。</li>
+  <li><b>動作更兇。</b>RMS duty 0.34 vs 0.13、飽和 3.2% vs 0%，jerk/snap 懲罰不足以把策略壓到 LQI 的平滑程度。</li>
+  <li><b>更多步數無效。</b>x std 在 75K 後沒有下降趨勢，最終值比 100K 存檔點差。</li>
+  <li><b>DR 下兩者失敗模式不同。</b>RL 在 300K 的 DR 評估有 1 集倒擺；LQI 則是 1 集撞軟限。DR 下 RL 的 x std 仍是 LQI 的 3.9 倍。</li>
+</ul>
+<div class="callout good">
+  <b>建議：</b>依腳本開頭寫好的判準，下一版 07113 改為 residual RL（策略輸出疊加在 LQI 上），讓 LQI 負責位置穩定、RL 只修補非線性與摩擦。
+  另外 5 集評估的雜訊不小，07113 建議至少把評估集數提高到 20，並跑 2–3 個 seed。
+</div>
+
+<h2>8. 產出檔案</h2>
+<div class="scroll"><table>
+<thead><tr><th>檔案</th><th>內容</th></tr></thead>
+<tbody>
+<tr><td class="tag">output/models/07112.zip</td><td>300K 最終模型</td></tr>
+<tr><td class="tag">output/models/07112_best.zip</td><td>100K，eval_dr return 最高（2,875）</td></tr>
+<tr><td class="tag">output/models/07112_config.json</td><td>builder 常數、名目參數、DR 範圍、獎勵、LQI 增益（上機用）</td></tr>
+<tr><td class="tag">tensorboard_logs/machine/07112_IP570_SysID_1</td><td>TensorBoard 紀錄</td></tr>
+</tbody></table></div>
+<p style="font-size:13.5px;color:var(--ink-2)">⚠️ 這次訓練是從 repo 根目錄 <code>vscode/</code> 執行的，以上檔案實際落在 <code>vscode/output/</code> 與 <code>vscode/tensorboard_logs/</code>，而不是 <code>rl_project/</code> 底下。另外腳本開頭引用的 <code>prompts/07112_system_id.md</code> 目前不存在。</p>
+
+<footer>資料來源：TensorBoard event file（標量全量讀取）與 07112_config.json。評估數值為每組 5 集的平均。</footer>
+</div>
+
+<script>
+const D = {"steps":[25000,50000,75000,100000,125000,150000,175000,200000,225000,250000,275000,300000],"eval_nominal":{"return_mean":[1042.30176,2091.21216,2951.8042,2808.1897,3214.4624,2689.0835,2980.09741,3275.02881,2903.36646,2473.14771,2799.96436,2690.28418],"full_length_frac":[0.0,0.8,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0],"rail_limit_hit":[1.0,0.2,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"angle_limit_hit":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"osc_x_std_tail":[0.03643,0.07725,0.04661,0.04853,0.06519,0.05088,0.06219,0.05651,0.0703,0.08421,0.06734,0.07607],"osc_theta_std_tail":[0.00941,0.02316,0.01816,0.02053,0.0133,0.01901,0.01814,0.01921,0.0149,0.01631,0.0137,0.01433],"osc_theta_zc_hz_tail":[0.91862,0.7721,1.0,0.67,0.63,0.33,0.47,0.82,1.01,0.8,1.13,1.11],"osc_x_mean_abs_tail":[0.06891,0.02715,0.00636,0.02841,0.01031,0.03073,0.00926,0.00957,0.00359,0.00136,0.00356,0.00611],"max_cart_pos_abs":[0.15277,0.13187,0.08277,0.11748,0.11677,0.11768,0.10073,0.10273,0.10966,0.13868,0.11581,0.12132],"RMS_Control_Effort":[0.28616,0.32021,0.3292,0.30998,0.26204,0.29522,0.3365,0.31202,0.31995,0.36376,0.34727,0.33713],"Duty_Saturation_frac":[0.0265,0.00586,0.0242,0.0136,0.0084,0.01,0.0268,0.0246,0.0182,0.034,0.03,0.0316],"IAE_per_step":[0.0089,0.0165,0.01251,0.01497,0.0105,0.01386,0.01279,0.01086,0.00997,0.01131,0.00966,0.01036],"Position_ISE_per_step":[0.00438,0.00534,0.00211,0.00366,0.00391,0.00474,0.00337,0.00286,0.00455,0.00646,0.0048,0.00549]},"eval_dr":{"return_mean":[572.71783,1492.47278,2639.45679,2875.0459,2196.6604,2645.52271,2684.87695,2650.46631,2720.87671,2355.59741,2809.77466,2354.65332],"full_length_frac":[0.0,0.2,0.8,0.8,0.4,0.8,0.8,0.8,0.8,0.8,1.0,0.8],"rail_limit_hit":[1.0,0.8,0.0,0.2,0.6,0.2,0.2,0.2,0.0,0.2,0.0,0.0],"angle_limit_hit":[0.0,0.0,0.2,0.0,0.0,0.0,0.0,0.0,0.2,0.0,0.0,0.2],"osc_x_std_tail":[0.0265,0.05612,0.04741,0.0445,0.06593,0.04921,0.06345,0.04756,0.05927,0.06725,0.06346,0.07389],"osc_theta_std_tail":[0.00801,0.01645,0.01557,0.01517,0.01449,0.01772,0.01646,0.01718,0.0172,0.01653,0.01851,0.01611],"osc_theta_zc_hz_tail":[0.94963,0.66971,1.09762,0.93871,0.90911,0.90547,1.45487,1.11194,1.39559,1.16847,1.18,1.46408],"osc_x_mean_abs_tail":[0.09088,0.04694,0.04433,0.0501,0.03176,0.0395,0.01399,0.02722,0.02037,0.0351,0.01113,0.00699],"max_cart_pos_abs":[0.15094,0.13858,0.11403,0.13039,0.14285,0.13792,0.1247,0.12506,0.11593,0.13764,0.12007,0.11911],"RMS_Control_Effort":[0.30801,0.2979,0.28206,0.26889,0.31577,0.31534,0.33221,0.33426,0.31878,0.33926,0.34343,0.36227],"Duty_Saturation_frac":[0.02074,0.01017,0.00721,0.0061,0.01548,0.01579,0.02713,0.0318,0.02551,0.02749,0.0264,0.03752],"IAE_per_step":[0.0093,0.01088,0.01006,0.00979,0.01177,0.01266,0.01099,0.01297,0.01025,0.01093,0.01068,0.01041],"Position_ISE_per_step":[0.00539,0.00387,0.00444,0.00477,0.005,0.00411,0.00391,0.00387,0.00411,0.00675,0.00444,0.00535]},"lqi_nominal":{"return_mean":[5349.04785,5349.04785,5349.04785,5349.04785,5349.04785,5349.04785,5349.04785,5349.04785,5349.04785,5349.04785,5349.04785,5349.04785],"full_length_frac":[1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0],"rail_limit_hit":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"angle_limit_hit":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"osc_x_std_tail":[0.01242,0.01242,0.01242,0.01242,0.01242,0.01242,0.01242,0.01242,0.01242,0.01242,0.01242,0.01242],"osc_theta_std_tail":[0.00847,0.00847,0.00847,0.00847,0.00847,0.00847,0.00847,0.00847,0.00847,0.00847,0.00847,0.00847],"osc_theta_zc_hz_tail":[0.44,0.44,0.44,0.44,0.44,0.44,0.44,0.44,0.44,0.44,0.44,0.44],"osc_x_mean_abs_tail":[0.00086,0.00086,0.00086,0.00086,0.00086,0.00086,0.00086,0.00086,0.00086,0.00086,0.00086,0.00086],"max_cart_pos_abs":[0.02871,0.02871,0.02871,0.02871,0.02871,0.02871,0.02871,0.02871,0.02871,0.02871,0.02871,0.02871],"RMS_Control_Effort":[0.1298,0.1298,0.1298,0.1298,0.1298,0.1298,0.1298,0.1298,0.1298,0.1298,0.1298,0.1298],"Duty_Saturation_frac":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"IAE_per_step":[0.0084,0.0084,0.0084,0.0084,0.0084,0.0084,0.0084,0.0084,0.0084,0.0084,0.0084,0.0084],"Position_ISE_per_step":[0.00018,0.00018,0.00018,0.00018,0.00018,0.00018,0.00018,0.00018,0.00018,0.00018,0.00018,0.00018]},"lqi_dr":{"return_mean":[4088.49707,4088.49707,4088.49707,4088.49707,4088.49707,4088.49707,4088.49707,4088.49707,4088.49707,4088.49707,4088.49707,4088.49707],"full_length_frac":[0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8],"rail_limit_hit":[0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2],"angle_limit_hit":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"osc_x_std_tail":[0.01888,0.01888,0.01888,0.01888,0.01888,0.01888,0.01888,0.01888,0.01888,0.01888,0.01888,0.01888],"osc_theta_std_tail":[0.01451,0.01451,0.01451,0.01451,0.01451,0.01451,0.01451,0.01451,0.01451,0.01451,0.01451,0.01451],"osc_theta_zc_hz_tail":[0.84255,0.84255,0.84255,0.84255,0.84255,0.84255,0.84255,0.84255,0.84255,0.84255,0.84255,0.84255],"osc_x_mean_abs_tail":[0.00102,0.00102,0.00102,0.00102,0.00102,0.00102,0.00102,0.00102,0.00102,0.00102,0.00102,0.00102],"max_cart_pos_abs":[0.06364,0.06364,0.06364,0.06364,0.06364,0.06364,0.06364,0.06364,0.06364,0.06364,0.06364,0.06364],"RMS_Control_Effort":[0.18801,0.18801,0.18801,0.18801,0.18801,0.18801,0.18801,0.18801,0.18801,0.18801,0.18801,0.18801],"Duty_Saturation_frac":[0.00287,0.00287,0.00287,0.00287,0.00287,0.00287,0.00287,0.00287,0.00287,0.00287,0.00287,0.00287],"IAE_per_step":[0.01021,0.01021,0.01021,0.01021,0.01021,0.01021,0.01021,0.01021,0.01021,0.01021,0.01021,0.01021],"Position_ISE_per_step":[0.00035,0.00035,0.00035,0.00035,0.00035,0.00035,0.00035,0.00035,0.00035,0.00035,0.00035,0.00035]},"rollout":{"step":[64,116,300,363,477,589,733,859,1017,1237,1358,1531,1767,1936,2105,2406,2653,2942,3488,3776,4051,4741,5568,5968,6381,6860,7173,7830,8457,8656,9220,9523,9838,10085,11176,11495,11879,12729,13239,13822,14264,14647,15238,15715,16203,17204,18217,19725,20261,21638,23211,24880,25748,26302,27829,29510,30570,32995,34602,36181,38578,40483,42629,44332,47474,49411,51707,54361,56181,58963,61863,65403,68916,71877,75877,79393,82615,86615,90615,93978,97978,101672,105672,109488,113111,116307,120307,124307,127845,131845,135845,139845,143845,147845,151447,154916,157818,161818,164595,168595,172595,176096,179733,183733,187064,191064,195064,199064,203064,207064,211064,215064,218758,222210,225874,229874,233874,237874,241874,245758,249220,252489,256489,259106,261086,263249,266472,270472,273762,277353,280678,284678,288416,291779,294240,296906,299469],"len":[16.0,14.5,25.0,22.7,23.9,24.5,26.2,26.8,28.2,30.9,30.9,31.9,34.0,34.6,35.1,37.6,39.0,40.9,45.9,47.2,48.2,53.9,60.5,62.2,63.8,68.0,70.6,75.3,80.9,81.8,86.3,87.9,89.8,90.7,99.4,101.4,103.5,109.6,113.0,117.2,118.6,119.9,123.0,122.3,124.3,131.5,134.8,141.6,142.9,152.6,163.5,177.1,179.2,178.4,191.7,202.9,210.5,231.6,245.2,250.1,270.8,286.0,299.0,310.9,336.5,351.5,370.6,391.2,404.7,427.6,446.6,471.9,491.9,516.2,542.4,561.8,577.3,608.7,643.1,661.5,684.7,711.0,726.8,748.9,769.3,777.3,798.2,816.8,835.1,843.7,864.3,881.4,894.8,916.6,924.8,930.5,924.2,929.0,927.2,927.2,932.0,934.8,931.2,931.2,930.9,930.9,933.9,933.9,935.8,939.5,947.6,947.6,944.5,943.7,940.3,940.3,940.3,940.3,940.3,943.1,943.0,946.7,946.7,945.1,924.9,906.5,903.8,907.4,900.3,902.9,896.1,896.1,893.5,887.2,871.8,858.4,844.0],"rew":[8.8,7.3,34.6,28.9,28.7,28.5,30.0,29.9,31.8,38.7,37.7,39.2,42.2,43.2,43.7,48.6,52.7,58.0,67.8,73.4,76.5,91.9,109.4,115.9,120.8,131.7,138.8,152.0,166.5,168.5,179.8,184.8,190.8,193.7,222.6,229.2,237.6,261.6,272.0,282.3,288.3,291.3,299.3,301.4,305.8,320.0,322.2,346.4,346.3,370.4,402.4,428.4,430.9,427.1,452.6,476.7,495.0,544.5,574.7,578.6,633.6,667.2,686.0,710.9,763.5,793.8,833.5,875.8,899.4,949.5,992.8,1053.4,1084.3,1131.5,1180.1,1214.3,1245.7,1309.8,1385.7,1424.4,1476.5,1528.1,1550.2,1591.3,1632.0,1641.9,1692.5,1721.1,1754.6,1773.2,1814.3,1847.4,1876.0,1929.5,1946.5,1949.1,1928.0,1934.9,1930.6,1927.4,1938.3,1948.7,1937.4,1935.3,1930.9,1924.5,1927.4,1942.5,1966.1,1988.7,2013.4,2013.0,2013.5,2035.0,2038.2,2068.9,2095.3,2120.9,2131.9,2152.6,2175.1,2208.0,2231.6,2242.3,2218.0,2189.2,2188.1,2212.3,2208.2,2249.5,2257.6,2285.1,2298.4,2288.6,2249.1,2212.7,2182.0]}};
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmtStep = s => s >= 1000 ? (s/1000).toFixed(0) + 'K' : String(s);
+
+function lineChart(id, opts){
+  const el = document.getElementById(id);
+  const W = 520, H = 250, m = {l:46, r:14, t:10, b:28};
+  const xs = opts.x, series = opts.series;
+  const all = series.flatMap(s => s.y);
+  let ymin = opts.ymin ?? Math.min(...all), ymax = Math.max(...all);
+  const pad = (ymax - ymin) * 0.08 || 1; ymax += pad; if (opts.ymin === undefined) ymin -= pad;
+  const xmin = 0, xmax = Math.max(...xs);
+  const X = v => m.l + (v - xmin) / (xmax - xmin) * (W - m.l - m.r);
+  const Y = v => H - m.b - (v - ymin) / (ymax - ymin) * (H - m.t - m.b);
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg'); svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  const mk = (t, a) => { const e = document.createElementNS(ns, t); for (const k in a) e.setAttribute(k, a[k]); svg.appendChild(e); return e; };
+  // grid + y ticks
+  const step = niceStep((ymax - ymin) / 4);
+  for (let v = Math.ceil(ymin/step)*step; v <= ymax; v += step){
+    mk('line', {x1:m.l, x2:W-m.r, y1:Y(v), y2:Y(v), stroke:css('--grid'), 'stroke-width':1});
+    const t = mk('text', {x:m.l-6, y:Y(v)+3.5, 'text-anchor':'end'}); t.textContent = opts.yfmt ? opts.yfmt(v) : +v.toFixed(3);
+  }
+  for (let v = 0; v <= xmax; v += opts.xstep || 50000){
+    const t = mk('text', {x:X(v), y:H-m.b+16, 'text-anchor':'middle'}); t.textContent = fmtStep(v);
+  }
+  mk('line', {x1:m.l, x2:W-m.r, y1:H-m.b, y2:H-m.b, stroke:css('--line'), 'stroke-width':1});
+  if (opts.markX !== undefined){
+    mk('line', {x1:X(opts.markX), x2:X(opts.markX), y1:m.t, y2:H-m.b, stroke:css('--ref'), 'stroke-width':1, 'stroke-dasharray':'2 3'});
+    const t = mk('text', {x:X(opts.markX)+4, y:m.t+10}); t.textContent = 'best';
+  }
+  for (const s of series){
+    const d = s.y.map((v,i) => (i?'L':'M') + X(xs[i]).toFixed(1) + ',' + Y(v).toFixed(1)).join('');
+    mk('path', {d, fill:'none', stroke:css(s.color), 'stroke-width':2, 'stroke-dasharray': s.dash ? '6 4' : 'none', 'stroke-linejoin':'round'});
+    if (s.dots) s.y.forEach((v,i) => mk('circle', {cx:X(xs[i]), cy:Y(v), r:3.5, fill:css(s.color), stroke:css('--panel'), 'stroke-width':2}));
+  }
+  const cross = mk('line', {y1:m.t, y2:H-m.b, stroke:css('--muted'), 'stroke-width':1, visibility:'hidden'});
+  el.appendChild(svg);
+  if (series.length > 1){
+    const lg = document.createElement('div'); lg.className = 'legend';
+    lg.innerHTML = series.map(s => `<span><i class="${s.dash?'dash':''}" style="border-color:${css(s.color)}"></i>${s.name}</span>`).join('');
+    el.appendChild(lg);
+  }
+  const tip = document.createElement('div'); tip.className = 'tip'; el.appendChild(tip);
+  svg.addEventListener('mousemove', e => {
+    const r = svg.getBoundingClientRect(); const px = (e.clientX - r.left) / r.width * W;
+    let bi = 0, bd = Infinity; xs.forEach((x,i) => { const dd = Math.abs(X(x) - px); if (dd < bd){bd = dd; bi = i;} });
+    cross.setAttribute('x1', X(xs[bi])); cross.setAttribute('x2', X(xs[bi])); cross.setAttribute('visibility', 'visible');
+    tip.innerHTML = `<div style="color:${css('--muted')}">步數 ${xs[bi].toLocaleString()}</div>` +
+      series.map(s => `<div><span class="sw" style="background:${css(s.color)}"></span>${s.name}：<b>${(opts.tfmt||(v=>v))(s.y[bi])}</b></div>`).join('');
+    tip.style.display = 'block';
+    const cr = el.getBoundingClientRect(); let left = e.clientX - cr.left + 12;
+    if (left + tip.offsetWidth > cr.width) left = e.clientX - cr.left - tip.offsetWidth - 12;
+    tip.style.left = left + 'px'; tip.style.top = (e.clientY - cr.top - 10) + 'px';
+  });
+  svg.addEventListener('mouseleave', () => { tip.style.display = 'none'; cross.setAttribute('visibility', 'hidden'); });
+}
+function niceStep(raw){ const p = Math.pow(10, Math.floor(Math.log10(raw))); const f = raw / p; return (f < 1.5 ? 1 : f < 3 ? 2 : f < 7 ? 5 : 10) * p; }
+
+const S = D.steps, sc = (a,k) => a.map(v => v*k);
+const BEST = 100000;
+function draw(){
+  document.querySelectorAll('.chart').forEach(c => { c.querySelectorAll('svg,.legend,.tip').forEach(n => n.remove()); });
+  lineChart('c-len', {x:D.rollout.step, ymin:0, series:[{name:'ep_len_mean', y:D.rollout.len, color:'--series-1'}], tfmt:v=>v.toFixed(0)});
+  lineChart('c-rew', {x:D.rollout.step, ymin:0, series:[{name:'ep_rew_mean', y:D.rollout.rew, color:'--series-1'}], tfmt:v=>v.toFixed(0)});
+  const pair = (key, k, f) => [
+    {name:'RL 名目', y:sc(D.eval_nominal[key],k), color:'--series-1', dots:true},
+    {name:'RL DR', y:sc(D.eval_dr[key],k), color:'--series-2', dots:true},
+    {name:'LQI 名目', y:sc(D.lqi_nominal[key],k), color:'--series-1', dash:true},
+    {name:'LQI DR', y:sc(D.lqi_dr[key],k), color:'--series-2', dash:true}];
+  lineChart('c-ret', {x:S, ymin:0, series:pair('return_mean',1), markX:BEST, tfmt:v=>v.toFixed(0)});
+  lineChart('c-xstd', {x:S, ymin:0, series:pair('osc_x_std_tail',100), markX:BEST, tfmt:v=>v.toFixed(2)+' cm'});
+  lineChart('c-tstd', {x:S, ymin:0, series:pair('osc_theta_std_tail',1000), markX:BEST, tfmt:v=>v.toFixed(1)+' mrad'});
+  lineChart('c-zc', {x:S, ymin:0, series:pair('osc_theta_zc_hz_tail',1), markX:BEST, tfmt:v=>v.toFixed(2)+' Hz'});
+}
+draw();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
+
+// tables
+const cols = [['return_mean','return',v=>v.toFixed(0)],['full_length_frac','跑滿',v=>(v*5).toFixed(0)+'/5'],
+  ['rail_limit_hit','撞軌',v=>(v*5).toFixed(0)],['angle_limit_hit','倒擺',v=>(v*5).toFixed(0)],
+  ['osc_x_std_tail','x std (cm)',v=>(v*100).toFixed(2)],['osc_x_mean_abs_tail','x 偏移 (cm)',v=>(v*100).toFixed(2)],
+  ['max_cart_pos_abs','max|x| (cm)',v=>(v*100).toFixed(1)],['osc_theta_std_tail','θ std (mrad)',v=>(v*1000).toFixed(1)],
+  ['osc_theta_zc_hz_tail','θ 過零 (Hz)',v=>v.toFixed(2)],['RMS_Control_Effort','RMS duty',v=>v.toFixed(3)],
+  ['Duty_Saturation_frac','飽和',v=>(v*100).toFixed(1)+'%']];
+function table(id, g, lqi){
+  let h = '<thead><tr><th>步數</th>' + cols.map(c => `<th class="v">${c[1]}</th>`).join('') + '</tr></thead><tbody>';
+  S.forEach((s,i) => { h += `<tr class="${s===BEST?'hl':''}"><td class="v">${fmtStep(s)}</td>` + cols.map(c => `<td class="v">${c[2](D[g][c[0]][i])}</td>`).join('') + '</tr>'; });
+  h += `<tr><td class="v"><b>LQI</b></td>` + cols.map(c => `<td class="v"><b>${c[2](D[lqi][c[0]][0])}</b></td>`).join('') + '</tr>';
+  document.getElementById(id).innerHTML = h + '</tbody>';
+}
+table('t-nom','eval_nominal','lqi_nominal'); table('t-dr','eval_dr','lqi_dr');
+
+const L = S.length - 1;
+const rows = [
+  ['return_mean','評估 return',v=>v.toFixed(0),'hi'],['osc_x_std_tail','x std (cm)',v=>(v*100).toFixed(2),'lo'],
+  ['max_cart_pos_abs','max|x| (cm)',v=>(v*100).toFixed(1),'lo'],['osc_x_mean_abs_tail','x 平均偏移 (cm)',v=>(v*100).toFixed(2),'lo'],
+  ['osc_theta_std_tail','θ std (mrad)',v=>(v*1000).toFixed(1),'lo'],['osc_theta_zc_hz_tail','θ 過零 (Hz)',v=>v.toFixed(2),'lo'],
+  ['RMS_Control_Effort','RMS duty',v=>v.toFixed(3),'lo'],['Duty_Saturation_frac','duty 飽和',v=>(v*100).toFixed(1)+'%','lo'],
+  ['IAE_per_step','IAE / step',v=>v.toFixed(4),'lo'],['Position_ISE_per_step','位置 ISE / step',v=>v.toFixed(4),'lo']];
+function ratio(a,b,dir){ if (!b) return a ? '—' : '1.0×'; const r = dir==='hi' ? b/a : a/b; return r.toFixed(1)+'×'; }
+function badge(a,b,dir){ if (!b) return a ? '<span class="badge crit">✕ LQI 為 0</span>' : '<span class="badge good">✓ 持平</span>';
+  const r = dir==='hi' ? b/a : a/b;
+  return r <= 1.2 ? '<span class="badge good">✓ 持平</span>' : r <= 2 ? '<span class="badge warn">△ 2 倍內</span>' : '<span class="badge crit">✕ 超過 2 倍</span>'; }
+document.getElementById('t-cmp').innerHTML = rows.map(([k,n,f,dir]) => {
+  const a = D.eval_nominal[k][L], b = D.lqi_nominal[k][L], c = D.eval_dr[k][L], d = D.lqi_dr[k][L];
+  return `<tr><td>${n}</td><td class="v">${f(a)}</td><td class="v">${f(b)}</td><td class="v">${ratio(a,b,dir)}</td>` +
+    `<td class="v">${f(c)}</td><td class="v">${f(d)}</td><td class="v">${ratio(c,d,dir)}</td><td>${badge(a,b,dir)}</td></tr>`;
+}).join('');
+</script>
+</body>
+</html>
