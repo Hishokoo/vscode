@@ -6,11 +6,15 @@ watch_07113.py — 載入 07113 匯出的 actor.pt，在 IP570 MuJoCo 模型上�
 環境、控制頻率與 07113 訓練時相同（頻率從同名的 _config.json 讀取）。
 
 用法（在 rl_project/ 目錄下執行）：
-  # 即時視窗（macOS 的 MuJoCo 視窗必須用 mjpython 啟動）
+  # 即時視窗。macOS 的 MuJoCo 視窗必須在 mjpython 底下跑；用 python 或 VS Code「執行」啟動時，
+  # 本檔會自動改用同一個環境裡的 mjpython 重新啟動，所以兩種寫法都可以
+  python experiments/evaluation/watch_07113.py
   mjpython experiments/evaluation/watch_07113.py
 
-  # 全開 DR（物理 / 感測 / 通訊隨機化 + 隨機外力），預設是名目模型
-  mjpython experiments/evaluation/watch_07113.py --dr
+  # 預設全開 DR：物理參數、感測（零點 / 比例 / 雜訊 / 編碼器校正）、通訊（延遲 / 掉幀）隨機化 + 隨機外力，
+  # 與 07113 訓練時相同；每一集抽一組新參數，抽到的值會印出來
+  # 只看名目模型（全部關閉）：
+  mjpython experiments/evaluation/watch_07113.py --nominal
 
   # 擾動測試：第 5 秒給擺桿角速度 +1.0 rad/s
   mjpython experiments/evaluation/watch_07113.py --push-sec 5 --push-vel 1.0
@@ -24,6 +28,7 @@ watch_07113.py — 載入 07113 匯出的 actor.pt，在 IP570 MuJoCo 模型上�
 import argparse
 import importlib.util
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -66,10 +71,25 @@ def set_camera(cam):
     cam.elevation = -8.0
 
 
+def ensure_mjpython():
+    """macOS 上即時視窗需要 mjpython：不是的話，用同一個 conda 環境的 mjpython 重新執行本檔（參數不變）。"""
+    if sys.platform != "darwin" or isinstance(mujoco.viewer._MJPYTHON, mujoco.viewer._MjPythonBase):
+        return
+    mjpython = Path(sys.executable).with_name("mjpython")
+    if not mjpython.exists() or os.environ.get("WATCH_07113_REEXEC"):
+        sys.exit(f"macOS 的 MuJoCo 視窗需要 mjpython，請改用：mjpython {' '.join(sys.argv)}\n"
+                 "或加 --mode video 錄成 gif")
+    print(f"↪ 改用 {mjpython} 重新啟動（macOS 的 MuJoCo 視窗需要 mjpython）")
+    os.environ["WATCH_07113_REEXEC"] = "1"
+    os.execv(str(mjpython), [str(mjpython), str(Path(__file__).resolve()), *sys.argv[1:]])
+
+
 def main():
+    sys.stdout.reconfigure(line_buffering=True)    # 背景 / 管線執行時也能即時看到輸出
     p = argparse.ArgumentParser()
     p.add_argument("--model", default="output/models/07113_E5_25hz_s1_actor.pt", help="相對於 rl_project/")
-    p.add_argument("--dr", action="store_true", help="全開 DR + 隨機外力（預設：名目模型、無外力）")
+    p.add_argument("--nominal", action="store_true",
+                   help="關閉所有 DR 與隨機外力（預設：全開 DR，與訓練時相同）")
     p.add_argument("--mode", choices=["human", "video"], default="human")
     p.add_argument("--episodes", type=int, default=3)
     p.add_argument("--seed", type=int, default=20_000, help="預設與最終評估同一組種子")
@@ -78,6 +98,8 @@ def main():
     p.add_argument("--speed", type=float, default=1.0, help="播放速度倍率（human 模式）")
     p.add_argument("--out", default="output/07113_demo.gif", help="video 模式輸出，相對於 rl_project/")
     args = p.parse_args()
+    if args.mode == "human":
+        ensure_mjpython()
 
     model_path = PROJECT_ROOT / args.model
     config_path = model_path.with_name(model_path.name.replace("_actor.pt", "_config.json"))
@@ -85,11 +107,12 @@ def main():
 
     m = load_train_module()
     timing = m.Timing.from_hz(hz)
-    env = m.IP570Env(timing, plant_dr=args.dr, sensor_dr=args.dr, comm_dr=args.dr, disturbance=args.dr)
+    dr = not args.nominal
+    env = m.IP570Env(timing, plant_dr=dr, sensor_dr=dr, comm_dr=dr, disturbance=dr)
     mu = load_actor(model_path)
     push_step = int(round(args.push_sec / timing.ctrl_dt)) if args.push_sec >= 0 else -1
     print(f"模型 {model_path.name}｜{hz} Hz（每步 {timing.ctrl_dt * 1000:.0f} ms）｜"
-          f"{'全開 DR' if args.dr else '名目模型'}｜每集最多 {timing.max_episode_steps} 步")
+          f"{'全開 DR（物理 / 感測 / 通訊 + 隨機外力）' if dr else '名目模型'}｜每集最多 {timing.max_episode_steps} 步")
 
     viewer, renderer, frames = None, None, []
     if args.mode == "human":
@@ -103,6 +126,13 @@ def main():
     for ep in range(args.episodes):
         obs, _ = env.reset(seed=args.seed + ep)
         ret, t, done = 0.0, 0, False
+        if dr:
+            pl, q, se, dp = env.p, env.q, env.sens, env.dist_plan
+            print(f"Episode {ep} 抽到：K_F={q['K_F']:.1f} N/duty  擺 {q['m_pole'] * 1000:.0f} g  "
+                  f"滑車摩擦 {pl['Fc_cart']:.1f} N  樞軸摩擦 {pl['hinge_fric'] * 1e3:.2f} mN·m  "
+                  f"角度零點偏移 {se['angle_bias'] * 1e3:+.1f} mrad  延遲 {env._lat_range[0] * 2}–"
+                  f"{env._lat_range[1] * 2} ms  外力 "
+                  + (f"t={dp['start'] * timing.ctrl_dt:.1f}s Δθ̇={dp['dtheta_dot']:.2f} rad/s" if dp else "無"))
         while not done:
             tic = time.perf_counter()
             with th.no_grad():
