@@ -6,6 +6,8 @@
 #   E2      E1 + --ctrl-hz 25                  時間尺度是不是主因
 #   E3a/b/c E1 或 E2（--e3-base）+ CAPS λ = 0.1 / 0.3 / 1.0
 #   E4      E3 中最佳（--e4-from）+ --asym-critic
+#   E5      E2 + --asym-critic（25 Hz，不加 CAPS）           第一輪結果：25 Hz 是主因、asym 在 50 Hz 下名目很好但不耐 DR
+#   E6      E2 + CAPS λ = 0.1 + --asym-critic（25 Hz）
 #
 #   python experiments/machine/07113_run_all.py --only E0 E1 E2 --jobs 6
 #   python experiments/machine/07113_run_all.py --only E3a E3b E3c --e3-base E2
@@ -27,7 +29,7 @@ PROJECT_ROOT = HERE.parents[1]                          # rl_project/
 TRAIN_SCRIPT = HERE / "07113trytrain_mujoco_td3.py"
 LOG_DIR = PROJECT_ROOT / "output" / "logs" / "07113"
 
-CODES = ["E0", "E1", "E2", "E3a", "E3b", "E3c", "E4"]
+CODES = ["E0", "E1", "E2", "E3a", "E3b", "E3c", "E4", "E5", "E6"]
 CAPS_LAMBDA = {"E3a": 0.1, "E3b": 0.3, "E3c": 1.0}
 SMOKE_ARGS = ["--timesteps", "20000", "--eval-freq", "10000", "--eval-episodes", "2",
               "--final-eval-episodes", "2"]
@@ -38,6 +40,8 @@ def build_experiments(e3_base, e4_from):
     for code, lam in CAPS_LAMBDA.items():
         exps[code] = exps[e3_base] + ["--caps-lambda-t", str(lam), "--caps-lambda-s", str(lam)]
     exps["E4"] = exps[e4_from] + ["--asym-critic"]
+    exps["E5"] = exps["E2"] + ["--asym-critic"]
+    exps["E6"] = exps["E2"] + ["--caps-lambda-t", "0.1", "--caps-lambda-s", "0.1", "--asym-critic"]
     return exps
 
 
