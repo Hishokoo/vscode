@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>07113 實驗報告</title>
+<style>
+  :root{
+    --bg:#fbfaf8; --panel:#ffffff; --ink:#0b0b0b; --ink-2:#52514e; --muted:#83817b;
+    --line:#e3e0da; --accent:#b4540a; --accent-soft:#fdf1e7; --code-bg:#f3f1ec;
+    --series-1:#2a78d6; --series-2:#eb6834; --series-3:#0f9b8e; --series-4:#8a4fd1;
+    --good:#0ca30c; --critical:#d03b3b; --warn:#c98a00;
+    --good-soft:#eaf6ea; --crit-soft:#fbeaea; --warn-soft:#fdf5e3;
+    --grid:#e8e5df; --ref:#83817b;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#141414; --panel:#1f1f1e; --ink:#ffffff; --ink-2:#c3c2b7; --muted:#918f87;
+      --line:#34332f; --accent:#f0924a; --accent-soft:#2a211c; --code-bg:#262624;
+      --series-1:#3987e5; --series-2:#d95926; --series-3:#22b3a4; --series-4:#a274e6;
+      --good-soft:#16261a; --crit-soft:#2c1a1a; --warn-soft:#2a2418;
+      --grid:#2e2e2b; --ref:#918f87;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#141414; --panel:#1f1f1e; --ink:#ffffff; --ink-2:#c3c2b7; --muted:#918f87;
+    --line:#34332f; --accent:#f0924a; --accent-soft:#2a211c; --code-bg:#262624;
+    --series-1:#3987e5; --series-2:#d95926; --series-3:#22b3a4; --series-4:#a274e6;
+    --good-soft:#16261a; --crit-soft:#2c1a1a; --warn-soft:#2a2418;
+    --grid:#2e2e2b; --ref:#918f87;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);line-height:1.72;font-size:16px;
+    font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","PingFang TC",Segoe UI,sans-serif}
+  .wrap{max-width:1100px;margin:0 auto;padding:44px 16px 90px}
+  header{border-bottom:2px solid var(--ink);padding-bottom:18px;margin-bottom:12px}
+  h1{font-size:29px;margin:0 0 6px;letter-spacing:-.01em}
+  .sub{color:var(--muted);font-size:14.5px;margin:0}
+  nav.toc{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13.5px;margin:18px 0 0}
+  nav.toc a{color:var(--ink-2);text-decoration:none;border-bottom:1px dotted var(--muted)}
+  h2{font-size:21px;margin:52px 0 14px;padding-top:20px;border-top:1px solid var(--line)}
+  h3{font-size:16px;margin:26px 0 8px;color:var(--accent)}
+  p{margin:0 0 13px}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.85em;background:var(--code-bg);padding:1px 5px;border-radius:4px}
+  pre{background:var(--code-bg);padding:12px 14px;border-radius:6px;overflow-x:auto;font-size:13px;line-height:1.55}
+  pre code{background:none;padding:0}
+  .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:16px 0}
+  table{border-collapse:collapse;width:100%;font-size:13.5px;background:var(--panel)}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  thead th{background:var(--accent-soft);font-weight:600;white-space:nowrap}
+  td.v,th.v{white-space:nowrap;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;text-align:right;font-variant-numeric:tabular-nums}
+  td.tag{white-space:nowrap;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;font-weight:600}
+  tr.hl td{background:var(--good-soft)}
+  tr.bad td{background:var(--crit-soft)}
+  .hero{display:flex;flex-wrap:wrap;gap:14px;margin:20px 0}
+  .tile{flex:1 1 180px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+  .tile .k{font-size:12.5px;color:var(--muted);display:block}
+  .tile .val{font-size:25px;font-weight:650;letter-spacing:-.02em;display:block;line-height:1.3;font-variant-numeric:tabular-nums}
+  .tile .n{font-size:12.5px;color:var(--ink-2);display:block}
+  .callout{border-left:4px solid var(--accent);background:var(--accent-soft);padding:12px 16px;border-radius:0 6px 6px 0;margin:16px 0}
+  .callout.crit{border-color:var(--critical);background:var(--crit-soft)}
+  .callout.good{border-color:var(--good);background:var(--good-soft)}
+  .callout.warn{border-color:var(--warn);background:var(--warn-soft)}
+  .badge{display:inline-block;font-size:12px;font-weight:600;padding:1px 8px;border-radius:10px;white-space:nowrap}
+  .badge.crit{color:var(--critical);background:var(--crit-soft)}
+  .badge.warn{color:var(--warn);background:var(--warn-soft)}
+  .badge.good{color:var(--good);background:var(--good-soft)}
+  .badge.mut{color:var(--ink-2);background:var(--code-bg)}
+  .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:18px}
+  .chart{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 14px 8px;position:relative}
+  .chart h4{margin:0 0 2px;font-size:14.5px}
+  .chart .cap{font-size:12.5px;color:var(--muted);margin:0 0 6px}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:var(--ink-2);margin:4px 0 2px}
+  .legend i{display:inline-block;width:16px;height:0;border-top:2px solid;vertical-align:middle;margin-right:5px}
+  .legend i.dash{border-top-style:dashed}
+  svg{display:block;width:100%;height:auto;overflow:visible}
+  svg text{font-size:11px;fill:var(--muted);font-family:inherit}
+  svg text.lab{fill:var(--ink-2);font-size:11.5px}
+  .tip{position:absolute;pointer-events:none;background:var(--panel);border:1px solid var(--line);border-radius:6px;
+    padding:6px 9px;font-size:12px;line-height:1.5;box-shadow:0 2px 8px rgba(0,0,0,.12);display:none;white-space:nowrap;z-index:5}
+  .tip b{font-variant-numeric:tabular-nums}
+  .tip .sw{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+  ul,ol{padding-left:22px;margin:0 0 13px} li{margin:3px 0}
+  .flow{display:flex;flex-direction:column;gap:10px;margin:16px 0}
+  .step{display:grid;grid-template-columns:88px 1fr;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+  .step .from{font-family:ui-monospace,Menlo,monospace;font-weight:650;font-size:14px;color:var(--accent)}
+  .step .q{font-weight:600;margin-bottom:4px}
+  .step .ev{font-size:14px;color:var(--ink-2)}
+  @media (max-width:560px){.step{grid-template-columns:1fr;gap:4px}}
+  .note{font-size:13.5px;color:var(--ink-2)}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>07113 實驗報告：IP570 純 RL 滑車位置穩定性</h1>
+  <p class="sub">腳本 <code>experiments/machine/07113trytrain_mujoco_td3.py</code> · 規格 <code>prompts/07113_pure_rl_changes.md</code> · 9 組設定 × 3 seed = 27 次訓練（各 300K 步）· 最終評估每組 50 集 × 名目 / 全開 DR · 報告產生於 2026-10-13</p>
+  <nav class="toc">
+    <a href="#s1">1. 結論</a><a href="#s2">2. 版本演進</a><a href="#s3">3. 07113 改了什麼</a><a href="#s4">4. 實驗設計</a>
+    <a href="#s5">5. 結果總表</a><a href="#s6">6. 推導最佳參數的邏輯</a><a href="#s7">7. 最佳設定 E5</a>
+    <a href="#s8">8. 機台參數</a><a href="#s9">9. 強健性測試</a><a href="#s10">10. 限制與風險</a><a href="#s11">11. 下一步</a><a href="#s12">12. 檔案與重現</a>
+  </nav>
+</header>
+
+<h2 id="s1">1. 結論</h2>
+<div class="callout good">
+  <b>07113 達成目標。最佳設定是 E5：控制頻率 25 Hz + asymmetric critic + 新探索雜訊，不加 CAPS。</b><br>
+  名目模型下滑車 x 標準差只有 <b>0.31 cm</b>，是同頻率 LQI 的 <b>0.17 倍</b>（目標 ≤ 2 倍），也比 50 Hz LQI（1.24 cm）小。
+  全開 DR 下 <b>96%</b> 跑滿 20 秒、<b>0%</b> 倒擺，出力 RMS duty 0.15，比同頻率 LQI 的 0.25 還低。三個 seed 結果一致。
+</div>
+<div class="hero">
+  <div class="tile"><span class="k">名目 x std ÷ 同頻率 LQI</span><span class="val">0.17×</span><span class="n">07112 為 6.1× · E0 重現為 5.96×</span></div>
+  <div class="tile"><span class="k">全開 DR 跑滿 20 s</span><span class="val">96%</span><span class="n">E0 62% · 50 Hz LQI 96%</span></div>
+  <div class="tile"><span class="k">全開 DR 倒擺比例</span><span class="val">0%</span><span class="n">3 seed × 50 集</span></div>
+  <div class="tile"><span class="k">全開 DR x std</span><span class="val">0.58 cm</span><span class="n">50 Hz LQI 1.87 cm</span></div>
+</div>
+<p>x 擺盪的成因有兩層，順序不能顛倒：</p>
+<ol>
+  <li><b>時間尺度（主因）。</b>50 Hz 下每個動作只維持 20 ms，比滑車的機械時間常數 τ<sub>mech</sub> ≈ 80 ms 短很多，「好動作」和「普通動作」的 Q 值差距被 critic 誤差淹沒。降到 25 Hz（E2）後，x 倍數從 4.91× 降到 1.45×。</li>
+  <li><b>critic 資訊不足（次因）。</b>在 25 Hz 下再讓 critic 看到真實狀態與本集物理參數（E5），x 再縮小約 8 倍。同樣的 asym critic 在 50 Hz（E4）卻只在名目模型上好、全開 DR 下 39% 倒擺，所以它必須建立在 25 Hz 之上。</li>
+</ol>
+<p>探索雜訊調整（E1）有小幅幫助；CAPS 動作平滑在 50 Hz 下有害、在 25 Hz 下也沒有額外好處。</p>
+
+<h2 id="s2">2. 版本演進：07111 → 07112 → 07113</h2>
+<div class="scroll"><table>
+<thead><tr><th>項目</th><th>07111</th><th>07112</th><th>07113（最佳 E5）</th></tr></thead>
+<tbody>
+<tr><td>被控體</td><td>InvertedPendulum-v4（擺約 5 kg、滑軌 ±1 m）+ DR</td><td>依 IP570 規格自寫 MuJoCo 模型（擺桿 0.39 m、滑軌 ±0.1925 m）</td><td>同 07112</td></tr>
+<tr><td>動作</td><td>力 + α 低通模擬馬達</td><td>PWM duty ∈ [−1, 1]，電壓致動器 F = K<sub>F</sub>·duty − B·ẋ</td><td>同 07112</td></tr>
+<tr><td>控制頻率</td><td>25 Hz</td><td>50 Hz（10 子步）</td><td><b>25 Hz（20 子步），可切換</b></td></tr>
+<tr><td>每集長度</td><td>2000 步（80 s）</td><td>1000 步（20 s）</td><td>500 步（20 s，以秒定義）</td></tr>
+<tr><td>觀測</td><td>5 維 + VecNormalize</td><td>6 維 [x, θ, ẋ, θ̇, u_applied, ∫x]，固定縮放</td><td>actor 同 07112；<b>critic 另加 19 維特權資訊</b></td></tr>
+<tr><td>感測 / 通訊</td><td>高斯雜訊、整步延遲 0/1</td><td>編碼器量化、12-bit ADC ×8、差分 + 低通；子步延遲 2–10 ms、掉幀 2%</td><td>同 07112</td></tr>
+<tr><td>獎勵</td><td>階梯 bonus +2/+5</td><td>二次項 + Cauchy 位能井 + jerk/snap</td><td><b>完全不變</b></td></tr>
+<tr><td>γ</td><td>0.99</td><td>0.995</td><td>0.99（γ = 0.99<sup>dt/0.04</sup>，維持約 4 s 視野）</td></tr>
+<tr><td>探索雜訊 σ</td><td>0.2（實際作用約 0.6）</td><td>0.2 → 0.05</td><td><b>0.08 → 0.02</b></td></tr>
+<tr><td>target policy noise / clip</td><td>0.2 / 0.5</td><td>0.2 / 0.5</td><td><b>0.05 / 0.1</b></td></tr>
+<tr><td>演算法</td><td>TD3</td><td>TD3</td><td>TD3 + AsymTD3Policy（CAPS 可選，最佳設定不用）</td></tr>
+<tr><td>評估</td><td>07seriestest 四情境各 60 集</td><td>每 25K 步、5 集，單一 seed</td><td><b>每 50K 步 10 集（挑 best）+ 最終 50 集（另一組種子）× 3 seed</b></td></tr>
+<tr><td>基準</td><td>05114 壓力測試</td><td>同環境 50 Hz LQI</td><td>同環境、<b>同頻率</b> LQI</td></tr>
+<tr><td>主要結果</td><td>realistic 96.7% 跑滿</td><td>名目 x std 7.61 cm，LQI 的 6.1 倍</td><td>名目 x std 0.31 cm，LQI 的 0.17 倍</td></tr>
+</tbody></table></div>
+<p class="note">07111 → 07112 換掉整個被控體，所以 07111 的數字和 07112 / 07113 不能直接比較；07112 起都改用同環境的 LQI 當基準。</p>
+
+<h2 id="s3">3. 07113 改了什麼</h2>
+<p>判讀起點：07112 在同一個獎勵下，LQI 的 return 是 RL 的兩倍。代表獎勵本身已偏好「滑車不動」，問題在 TD3 沒有把它最佳化到位，所以 07113 <b>不改獎勵</b>，只改下列五項，每一項都是可單獨開關的命令列參數。</p>
+<div class="scroll"><table>
+<thead><tr><th>#</th><th>改動</th><th>參數</th><th>07112 → 07113 預設</th><th>理由</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>評估修正</td><td class="tag">--eval-freq / --eval-episodes / --final-eval-episodes</td><td class="v">25K·5 → 50K·10 + 最終 50</td><td>5 集的成功率刻度是 20%，雜訊太大；best 存檔點用 10000 起的種子挑，最終評估改用 20000 起，避免同一組種子又挑又評分而偏高</td></tr>
+<tr><td>2</td><td>探索雜訊</td><td class="tag">--explore-sigma(-final) / --target-noise(-clip) / --noise-type</td><td class="v">0.2→0.05、0.2/0.5 → 0.08→0.02、0.05/0.1</td><td>σ = 0.2 duty 比 LQI 平衡時的 RMS duty（0.13）還大；target noise 0.2 讓 critic 把 ±0.2 duty 內的 Q 平均掉</td></tr>
+<tr><td>3</td><td>時間尺度</td><td class="tag">--ctrl-hz {50,25}</td><td class="v">50 → 可選 25</td><td>20 ms 的動作對 τ ≈ 80 ms 的慢模態 x 影響太小（Tallec et al., ICML 2019）。所有跟頻率有關的量集中在 <code>Timing</code>，明確傳入，避免 import 時綁定的預設值</td></tr>
+<tr><td>4</td><td>CAPS 動作平滑</td><td class="tag">--caps-lambda-t / -s / --caps-sigma</td><td class="v">無 → 0（關閉）</td><td>RL 出力是 LQI 的 2.6 倍；jerk/snap 在獎勵裡要先經 critic 才能影響 actor，路徑間接（Mysore et al., ICRA 2021）</td></tr>
+<tr><td>5</td><td>Asymmetric critic</td><td class="tag">--asym-critic</td><td class="v">無 → 關閉</td><td>critic 只看 6 維觀測，速度落後、看不到本集參數，∂Q/∂a 不準（Pinto et al., RSS 2018）。critic 不上機，不受實機限制</td></tr>
+</tbody></table></div>
+<h3>特權資訊（critic 專用，19 維，不上機）</h3>
+<div class="scroll"><table>
+<thead><tr><th>項目</th><th>來源</th><th>正規化</th></tr></thead>
+<tbody>
+<tr><td>真實 x, θ, ẋ, θ̇</td><td><code>data.qpos / qvel</code></td><td>除以 OBS_SCALE</td></tr>
+<tr><td>K<sub>F</sub>, B, armature, m_pole, lc</td><td>derive_plant 輸出</td><td>log(值 / 名目)</td></tr>
+<tr><td>Fc_cart, b_cart, hinge_fric, hinge_damp</td><td>本集物理參數</td><td>DR 範圍線性對應到 [−1, 1]</td></tr>
+<tr><td>angle_bias, angle_scale, adc_noise, enc_cal</td><td>本集感測參數</td><td>DR 範圍線性對應到 [−1, 1]</td></tr>
+<tr><td>本步延遲（子步）、本步外力</td><td>step 內抽樣值</td><td>(lat − 3) / 2；F / 名目最大外力</td></tr>
+</tbody></table></div>
+<h3>沒有改的</h3>
+<p>獎勵函數（REWARD、Cauchy 位能井、clip）、物理參數與 DR 範圍、感測與通訊模型、終止條件（θ 0.2 rad、x 0.15 m）、觀測縮放與 actor 的 6 維觀測定義，全部維持 07112。</p>
+<p class="note">另外修正：輸出路徑改以腳本位置推出 <code>rl_project/</code>（07112 從 repo 根目錄執行時，輸出會跑到 <code>vscode/output/</code>）。</p>
+
+<h2 id="s4">4. 實驗設計</h2>
+<p>每個代號都只比前一組多一個改動，方便歸因。所有設定跑 seed 0、1、2；判斷規則是「進步要大於跨 seed 標準差才算數」。</p>
+<div class="scroll"><table>
+<thead><tr><th>代號</th><th>基底</th><th>新增改動</th><th class="v">頻率</th><th class="v">σ 探索</th><th class="v">target</th><th class="v">CAPS λ</th><th>asym</th><th>要回答的問題</th></tr></thead>
+<tbody>
+<tr><td class="tag">E0</td><td>—</td><td>--preset 07112</td><td class="v">50</td><td class="v">0.2→0.05</td><td class="v">0.2/0.5</td><td class="v">0</td><td>—</td><td>07112 在新評估下的真實水準</td></tr>
+<tr><td class="tag">E1</td><td>E0</td><td>新探索雜訊</td><td class="v">50</td><td class="v">0.08→0.02</td><td class="v">0.05/0.1</td><td class="v">0</td><td>—</td><td>探索雜訊是不是主因</td></tr>
+<tr><td class="tag">E2</td><td>E1</td><td>25 Hz</td><td class="v">25</td><td class="v">0.08→0.02</td><td class="v">0.05/0.1</td><td class="v">0</td><td>—</td><td>時間尺度是不是主因</td></tr>
+<tr><td class="tag">E3a/b/c</td><td>E1</td><td>CAPS</td><td class="v">50</td><td class="v">0.08→0.02</td><td class="v">0.05/0.1</td><td class="v">0.1/0.3/1.0</td><td>—</td><td>平滑化能否壓低出力與 x 擺盪</td></tr>
+<tr><td class="tag">E4</td><td>E3b</td><td>asym critic</td><td class="v">50</td><td class="v">0.08→0.02</td><td class="v">0.05/0.1</td><td class="v">0.3</td><td>✓</td><td>critic 資訊不足是不是主因</td></tr>
+<tr class="hl"><td class="tag">E5</td><td>E2</td><td>asym critic</td><td class="v">25</td><td class="v">0.08→0.02</td><td class="v">0.05/0.1</td><td class="v">0</td><td>✓</td><td>25 Hz 下 asym critic 是否還會犧牲 DR</td></tr>
+<tr><td class="tag">E6</td><td>E5</td><td>CAPS 0.1</td><td class="v">25</td><td class="v">0.08→0.02</td><td class="v">0.05/0.1</td><td class="v">0.1</td><td>✓</td><td>再加一點平滑有沒有額外幫助</td></tr>
+</tbody></table></div>
+<p class="note">E0–E4 是第一輪（依規格第 8 節，全部同時跑，所以 E3 / E4 疊在 E1 上）；E5 / E6 是看完第一輪結果後追加的第二輪。共用設定：300K 步、lr 1e-3 → (70%) → 3e-4、batch 256、buffer 200K、policy_delay 2、SB3 預設網路 [400, 300]。</p>
+<h3>評估協定</h3>
+<ul>
+  <li><b>訓練中評估</b>：每 50K 步，deterministic，名目模型與全開 DR 各 10 集，種子 10000–10009。用全開 DR 的 return 挑 best 存檔點。</li>
+  <li><b>最終評估</b>：final 與 best 模型各跑名目 / 全開 DR 各 50 集，種子 20000–20049（與挑 best 的種子不重疊）。同頻率 LQI 在同一批種子上當對照。</li>
+  <li><b>主要指標</b>：<code>osc_x_std_tail</code>（後 50% 的 x 標準差）÷ 同頻率 LQI；成功判準是名目 ≤ 2 倍，且 <code>angle_limit_hit</code> 不高於 07112（E0）。</li>
+</ul>
+
+<h2 id="s5">5. 結果總表</h2>
+<div class="grid2">
+  <div class="chart" id="c-ratio"><h4>名目 x std ÷ 同頻率 LQI（final 模型）</h4><p class="cap">長條為 3 seed 平均，點為各 seed；虛線 = 2 倍門檻，實線 = LQI。越低越好</p></div>
+  <div class="chart" id="c-curve"><h4>訓練中評估：名目 x std（cm，3 seed 平均）</h4><p class="cap">每 50K 步 10 集；虛線為 50 Hz / 25 Hz LQI</p></div>
+</div>
+
+<h3>名目模型（final，50 集 × 3 seed 平均 ± 標準差）</h3>
+<div class="scroll"><table id="t-nom"></table></div>
+<h3>全開 DR（final，50 集 × 3 seed）</h3>
+<div class="scroll"><table id="t-dr"></table></div>
+<p class="note">倍數 = RL ÷ 同頻率 LQI（50 Hz：x std 1.24 cm、θ std 8.5 mrad、RMS duty 0.132；25 Hz：1.88 cm、13.0 mrad、0.147）。綠底 = 最佳設定；紅底 = 名目倒擺比例明顯上升。</p>
+
+<h3>best 存檔點 vs final</h3>
+<p>依 DR return 挑的 best 模型和 final 沒有一致的優劣：E0、E1、E3 的 best 比 final 好（例如 E1：3.88× vs 4.91×），E2、E4、E5、E6 則是 final 比 best 好。原因是訓練中評估只有 10 集，挑點仍帶雜訊。<b>本報告一律以 final 模型做結論。</b></p>
+
+<h2 id="s6">6. 推導最佳參數的邏輯</h2>
+<p>每一步只改一個變數，用「改動造成的差距是否大於跨 seed 標準差」判斷是否有效，再決定下一步要疊在哪個基底上。</p>
+<div class="flow">
+  <div class="step"><div class="from">E0</div><div><div class="q">基準線可信嗎？</div><div class="ev">E0 名目 x std 7.41 ± 0.84 cm（5.96×），07112 單一 seed 是 7.61 cm（6.1×）。<b>新腳本用 --preset 07112 重現了 07112</b>，表示 07112 不是運氣差，後面的比較有共同起點。</div></div></div>
+  <div class="step"><div class="from">E0→E1</div><div><div class="q">探索雜訊是主因嗎？ <span class="badge warn">有效但不夠</span></div><div class="ev">x 倍數 5.96 ± 0.68 → 4.91 ± 0.41，差距略大於標準差，算有效。但離 2 倍很遠，全開 DR 跑滿比例反而 62% → 55%，倒擺 2% → 7%。<b>保留新雜訊參數，但它不是主因。</b></div></div></div>
+  <div class="step"><div class="from">E1→E2</div><div><div class="q">時間尺度是主因嗎？ <span class="badge good">主因</span></div><div class="ev">x 倍數 4.91 → 1.45 ± 0.38，差距是標準差的 9 倍；全開 DR 跑滿 55% → 93%，三個 seed 都在 92–94%。訓練曲線上 E2 從 50K 步起就穩定在約 2.8 cm，E0 / E1 一直在 3.5–7 cm 跳動。<b>25 Hz 定為後續基底。</b></div></div></div>
+  <div class="step"><div class="from">E1→E3</div><div><div class="q">動作平滑能取代降頻嗎？ <span class="badge crit">不能，且有害</span></div><div class="ev">x 倍數 4.60 / 5.17 / 3.90，都在 E1 的誤差範圍內；θ std 從 13 mrad 升到 26 / 30 / 36 mrad。λ = 1.0 時名目 73% 倒擺。CAPS 確實壓低出力（RMS 0.307 → 0.249），但 x 學不起來的根源不是「動作不平滑」。<b>λ 越大越差，排除 CAPS 作為主要手段。</b></div></div></div>
+  <div class="step"><div class="from">E3b→E4</div><div><div class="q">critic 資訊不足是原因嗎？ <span class="badge warn">是，但 50 Hz 下不耐 DR</span></div><div class="ev">名目 x 倍數 5.17 → 0.65，大幅改善；但全開 DR 跑滿只有 43%、倒擺 39%。eval_dr 與 eval_nominal 的差距擴大，正是規格第 5 節預先寫的「已知限制」：critic 知道 actor 推不出來的資訊，策略只在名目模型上調得好。<b>結論：critic 資訊有用，但不能單獨解決。</b></div></div></div>
+  <div class="step"><div class="from">E2→E5</div><div><div class="q">兩個有效因素疊加？ <span class="badge good">最佳</span></div><div class="ev">在 25 Hz（E2）上加 asym critic、不加 CAPS：名目 x 倍數 1.45 → 0.17 ± 0.05，全開 DR 跑滿 93% → 96%、倒擺 1% → 0%。E4 在 50 Hz 的 DR 崩潰<b>沒有出現</b>。三個 seed 名目 x std 為 0.35 / 0.21 / 0.37 cm。</div></div></div>
+  <div class="step"><div class="from">E5→E6</div><div><div class="q">再加一點平滑還有幫助嗎？ <span class="badge crit">沒有</span></div><div class="ev">CAPS λ = 0.1：名目 x 0.31 → 0.57 cm，全開 DR x 0.58 → 1.39 cm、跑滿 96% → 93%，各項都比 E5 差。<b>最佳設定不加 CAPS。</b></div></div></div>
+</div>
+<h3>為什麼 25 Hz 有效（機制）</h3>
+<ul>
+  <li><b>動作對 x 的影響量。</b>滑車加上折算的轉子慣量約 3.9 kg，τ<sub>mech</sub> = m<sub>eq</sub>/B ≈ 80 ms。20 ms 的動作只讓滑車速度走到穩態的 1 − e<sup>−20/80</sup> ≈ 22%，40 ms 則是 39%。單一動作對 x 的影響變大，critic 比較容易分辨好壞。</li>
+  <li><b>折扣視野不變、步數減半。</b>γ 隨頻率調整，兩者都看約 4 秒；但 25 Hz 下同樣 4 秒只需傳遞 100 步而不是 200 步的 bootstrap，Q 值誤差累積較少。</li>
+  <li><b>同樣 300K 步等於兩倍模擬時間</b>（25 Hz：12,000 s；50 Hz：6,000 s）。這是 E2 的優勢之一，但 E2 在 50K 步（2,000 s 模擬時間）時 x 已經是 2.9 cm，比 E1 跑完 6,000 s 還好，所以不只是「看得比較多」。</li>
+</ul>
+<h3>為什麼 asym critic 在 25 Hz 不會犧牲 DR（推測）</h3>
+<p>這一點目前只有結果、沒有直接驗證的機制。比較可能的解釋是：50 Hz 下 critic 本身就難以學好 x，特權資訊讓它變成主要依賴「知道參數」來估 Q，actor 學到的是依賴這些資訊的策略；25 Hz 下 critic 從 6 維觀測就能學到 x 的基本結構，特權資訊只是降低變異，actor 不會過度依賴。若要驗證，可以看 E4 與 E5 在不同參數極端值上的失敗分佈（結果檔裡有每集抽到的參數）。</p>
+
+<h2 id="s7">7. 最佳設定 E5</h2>
+<pre><code>cd rl_project
+python experiments/machine/07113trytrain_mujoco_td3.py --tag E5 --seed 1 --ctrl-hz 25 --asym-critic
+# 或批次三個 seed：
+python experiments/machine/07113_run_all.py --only E5</code></pre>
+<div class="grid2">
+<div class="scroll" style="margin:0"><table>
+<thead><tr><th>訓練參數</th><th class="v">值</th></tr></thead>
+<tbody>
+<tr><td>控制頻率 / 子步</td><td class="v">25 Hz / 20 × 2 ms</td></tr>
+<tr><td>γ</td><td class="v">0.99</td></tr>
+<tr><td>每集上限</td><td class="v">500 步（20 s）</td></tr>
+<tr><td>探索雜訊</td><td class="v">Normal σ 0.08 → (60–90%) → 0.02</td></tr>
+<tr><td>target noise / clip</td><td class="v">0.05 / 0.1</td></tr>
+<tr><td>CAPS</td><td class="v">關閉（原版 TD3.train）</td></tr>
+<tr><td>Policy</td><td class="v">AsymTD3Policy（actor ObsOnly，critic ObsPriv）</td></tr>
+<tr><td>網路</td><td class="v">actor / critic 各 [400, 300]</td></tr>
+<tr><td>learning rate</td><td class="v">1e-3 → (70%) → 3e-4</td></tr>
+<tr><td>batch / buffer / policy_delay</td><td class="v">256 / 200K / 2</td></tr>
+<tr><td>總步數</td><td class="v">300K（12,000 s 模擬時間）</td></tr>
+</tbody></table></div>
+<div class="scroll" style="margin:0"><table>
+<thead><tr><th>上機要用的常數</th><th class="v">值</th></tr></thead>
+<tbody>
+<tr><td>控制週期</td><td class="v"><b>40 ms</b>（必須與訓練一致）</td></tr>
+<tr><td>觀測</td><td class="v">[x, θ, ẋ, θ̇, u_applied, ∫x]</td></tr>
+<tr><td>縮放</td><td class="v">x 0.15、θ 0.2、ẋ 0.5、θ̇ 2.0、∫x 0.3</td></tr>
+<tr><td>速度低通 α（10 Hz 截止）</td><td class="v">0.919（50 Hz 時為 0.715）</td></tr>
+<tr><td>∫x 夾限</td><td class="v">±0.3 m·s</td></tr>
+<tr><td>m/count</td><td class="v">72.5 µm（隨 pulley_r 改）</td></tr>
+<tr><td>ADC 零點 / count/rad</td><td class="v">2048 / 680.1</td></tr>
+<tr><td>ADC 每拍取樣</td><td class="v">8 次平均</td></tr>
+<tr><td>模型檔</td><td class="v">07113_E5_25hz_s{0,1,2}_actor.pt</td></tr>
+<tr><td>推論</td><td class="v">duty = actor.mu(obs6)，輸出含 tanh</td></tr>
+</tbody></table></div>
+</div>
+<p style="margin-top:14px">備援控制器：25 Hz LQI 增益（z = [x, θ, ẋ, θ̇, u_applied, ∫x]，u = −K z）<br>
+<code>[-4.403, -9.515, -3.994, -1.577, 0.004, -1.658]</code>　（50 Hz：<code>[-6.109, -11.854, -4.823, -1.978, -0.059, -2.307]</code>）</p>
+<div class="callout warn"><b>選哪個 seed：</b>三個 seed 差異很小（名目 x std 0.35 / 0.21 / 0.37 cm，DR 跑滿都是 96%）。報告與 <code>watch_07113.py</code> 預設用 seed 1。上機時建議三個都準備好，第一個不穩就換下一個。</div>
+
+<h2 id="s8">8. 機台參數：規格、推導、估算與實測</h2>
+<div class="callout crit"><b>目前沒有任何實測值。</b>IP570 尚未到貨量測，下表所有數字都來自規格表或推估。「實測值」欄位是到貨後要填的。DR 範圍目前刻意放寬，用來涵蓋推估誤差；實測後應收斂到「實測值 ±10–20%」再重訓。</div>
+<p class="note">來源標記：<span class="badge good">規</span> 規格表，視為已知值　<span class="badge warn">推</span> 由規格推導　<span class="badge crit">估</span> 規格未給，依材質或類比估算</p>
+<h3>物理參數（PLANT_NOMINAL / PLANT_DR）</h3>
+<div class="scroll"><table>
+<thead><tr><th>參數</th><th class="v">名目值</th><th class="v">DR 範圍</th><th>單位</th><th>來源</th><th>依據</th><th>實測值</th><th>怎麼量</th></tr></thead>
+<tbody>
+<tr><td class="tag">pulley_r</td><td class="v">0.012</td><td class="v">0.010–0.014</td><td>m</td><td><span class="badge crit">估</span></td><td>照片 / 圖紙估 ⌀20–28 mm</td><td>待量測</td><td><b>第一優先。</b>馬達轉 N 圈量滑車位移，r = 位移 / (2π·N)；同時得到 m/count</td></tr>
+<tr><td class="tag">J_motor</td><td class="v">1.3e-6</td><td class="v">0.8e-6–2.2e-6（log）</td><td>kg·m²</td><td><span class="badge crit">估</span></td><td>520 級轉子 + 減速箱</td><td>待量測</td><td>階躍 duty 量滑車速度上升時間 τ，回推 armature = τ·B − m</td></tr>
+<tr><td class="tag">gear_N</td><td class="v">20</td><td class="v">—</td><td>—</td><td><span class="badge good">規</span></td><td>減速比 1:20</td><td>—</td><td>—</td></tr>
+<tr><td class="tag">Kt_out</td><td class="v">0.17</td><td class="v">0.14–0.23</td><td>N·m/A</td><td><span class="badge warn">推</span></td><td>η·Ke_out（η≈0.85）</td><td>待量測</td><td>堵轉電流 + 拉力計</td></tr>
+<tr><td class="tag">Ke_out</td><td class="v">0.197</td><td class="v">0.187–0.207</td><td>V·s/rad</td><td><span class="badge warn">推</span></td><td>無載 549 rpm 推得</td><td>待量測</td><td>固定 duty 量穩態速度 v<sub>free</sub></td></tr>
+<tr><td class="tag">R_total</td><td class="v">4.8</td><td class="v">4.3–5.5</td><td>Ω</td><td><span class="badge warn">推</span></td><td>12 V / 2.8 A + 驅動導通電阻</td><td>待量測</td><td>三用電表量線圈 + 驅動器</td></tr>
+<tr><td class="tag">V_supply</td><td class="v">12.0</td><td class="v">11.4–12.3</td><td>V</td><td><span class="badge good">規</span></td><td>電源規格</td><td>待量測</td><td>帶載量電壓</td></tr>
+<tr><td class="tag">m_cart</td><td class="v">0.20</td><td class="v">0.15–0.30</td><td>kg</td><td><span class="badge crit">估</span></td><td>滑塊 + 軸承 + 電位器 + 皮帶夾</td><td>待量測</td><td>拆下秤重</td></tr>
+<tr><td class="tag">m_rod</td><td class="v">0.062</td><td class="v">0.03–0.10</td><td>kg</td><td><span class="badge crit">估</span></td><td>不鏽鋼 ⌀5 × 0.39 m，材質未確認</td><td>待量測</td><td>秤重</td></tr>
+<tr><td class="tag">m_hub</td><td class="v">0.012</td><td class="v">0.005–0.02</td><td>kg</td><td><span class="badge crit">估</span></td><td>擺桿夾頭</td><td>待量測</td><td>秤重</td></tr>
+<tr><td class="tag">pole_L</td><td class="v">0.39</td><td class="v">—</td><td>m</td><td><span class="badge good">規</span></td><td>轉軸到頂端</td><td>待確認</td><td>尺量</td></tr>
+<tr><td class="tag">Fc_cart</td><td class="v">2.5</td><td class="v">1.0–5.0</td><td>N</td><td><span class="badge warn">推</span></td><td>無載電流 0.15 A 換算 2.1 N + 軸承 0.4 N</td><td>待量測</td><td>慢慢增加 duty 直到滑車開始動，F = K<sub>F</sub>·duty</td></tr>
+<tr><td class="tag">b_cart</td><td class="v">0.0</td><td class="v">0.0–5.0</td><td>N·s/m</td><td><span class="badge crit">估</span></td><td>反電動勢以外的黏滯</td><td>待量測</td><td>不同 duty 的穩態速度斜率</td></tr>
+<tr><td class="tag">hinge_fric</td><td class="v">3e-4</td><td class="v">0–1e-3</td><td>N·m</td><td><span class="badge good">規</span></td><td>WDD35D4 起動力矩 ≤ 1e-3</td><td>待量測</td><td>擺桿自由擺動的振幅衰減（線性衰減斜率）</td></tr>
+<tr><td class="tag">hinge_damp</td><td class="v">5e-5</td><td class="v">0–2e-4</td><td>N·m·s</td><td><span class="badge crit">估</span></td><td>—</td><td>待量測</td><td>同上（指數衰減部分）</td></tr>
+</tbody></table></div>
+<h3>推導量（名目）</h3>
+<div class="scroll"><table>
+<thead><tr><th>量</th><th class="v">值</th><th>公式 / 意義</th></tr></thead>
+<tbody>
+<tr><td class="tag">K_F</td><td class="v">35.4 N/duty</td><td>V·Kt / (R·r)</td></tr>
+<tr><td class="tag">B</td><td class="v">48.5 N·s/m</td><td>Kt·Ke / (R·r²)，反電動勢阻尼</td></tr>
+<tr><td class="tag">armature</td><td class="v">3.61 kg</td><td>J·N² / r²，約滑車本體的 18 倍</td></tr>
+<tr><td class="tag">v_free</td><td class="v">0.73 m/s</td><td>K_F / B，滿 duty 穩態速度</td></tr>
+<tr><td class="tag">τ_mech</td><td class="v">80 ms</td><td>m_eq / B；<b>這是 25 Hz 有效的關鍵數字</b>，到貨後應優先驗證</td></tr>
+<tr><td class="tag">m_pole / lc</td><td class="v">74 g / 163 mm</td><td>擺質量 / 質心到轉軸距離</td></tr>
+<tr><td class="tag">不穩定極點</td><td class="v">≈ 6.14 rad/s</td><td>√(m·g·lc / I_pivot)，時間常數約 160 ms，25 Hz 仍有 4 個控制週期</td></tr>
+</tbody></table></div>
+<h3>感測與通訊（SENSOR / COMM）</h3>
+<div class="scroll"><table>
+<thead><tr><th>項目</th><th>名目</th><th>DR</th><th>來源</th><th>實測值 / 怎麼量</th></tr></thead>
+<tbody>
+<tr><td class="tag">編碼器</td><td colspan="2">260 線 × 4 倍頻 = 1040 count/rev</td><td><span class="badge good">規</span></td><td>—</td></tr>
+<tr><td class="tag">電位器</td><td colspan="2">WDD35D4，電氣轉角 345° ± 2°，12-bit ADC → 1.47 mrad/階</td><td><span class="badge good">規</span></td><td>—</td></tr>
+<tr><td class="tag">angle_bias</td><td>0</td><td>±0.01 rad</td><td><span class="badge crit">估</span></td><td>待量測：擺桿自然下垂與倒立讀值差 π 校正後的殘差</td></tr>
+<tr><td class="tag">angle_scale</td><td>1.0</td><td>0.99–1.01</td><td><span class="badge warn">推</span></td><td>電氣轉角 ±2° → ±0.6%</td></tr>
+<tr><td class="tag">adc_noise</td><td>1.0 count</td><td>0.5–3.0 count</td><td><span class="badge crit">估</span></td><td>待量測：靜止時連續讀 1000 次求 σ</td></tr>
+<tr><td class="tag">enc_cal</td><td>1.0</td><td>0.99–1.01</td><td><span class="badge crit">估</span></td><td>隨 pulley_r 量測一起校正</td></tr>
+<tr><td class="tag">latency</td><td>6 ms</td><td>2–10 ms</td><td><span class="badge crit">估</span></td><td>待量測：PC 推論 + USB serial 來回，記錄 P50 / P99；<b>必須小於 40 ms 週期</b></td></tr>
+<tr><td class="tag">drop_prob</td><td>0</td><td>2%</td><td><span class="badge crit">估</span></td><td>待量測：MCU 端計數逾時次數</td></tr>
+</tbody></table></div>
+<h3>擾動與初始條件</h3>
+<p>外力：機率 0.3，第 2–15 秒、持續 40–100 ms，名目擺桿 Δθ̇ 0.3–1.0 rad/s（模擬敲擺頂；25 Hz 下為第 50–375 步、1–3 步）。初始條件：|x| ≤ 3 cm、|θ| ≤ 0.10 rad、|θ̇| ≤ 0.2 rad/s。終止：|θ| &gt; 0.2 rad 或 |x| &gt; 0.15 m（硬限位 0.1925 m）。</p>
+
+<h2 id="s9">9. 強健性測試</h2>
+<h3>瞬間推擺桿（名目模型，第 5 秒，每格 10 集，撐滿 20 秒的比例）</h3>
+<div class="scroll"><table>
+<thead><tr><th class="v">推力 Δθ̇</th><th class="v">LQI 25 Hz</th><th class="v">LQI 50 Hz</th><th class="v">E2 s0</th><th class="v">E5 s0</th><th class="v">E5 s1</th><th class="v">E5 s2</th></tr></thead>
+<tbody>
+<tr><td class="v">0.3 / 0.5 / 0.7 rad/s</td><td class="v">100%</td><td class="v">100%</td><td class="v">100%</td><td class="v">100%</td><td class="v">100%</td><td class="v">100%</td></tr>
+<tr class="bad"><td class="v">1.0 rad/s</td><td class="v">40%</td><td class="v">90%</td><td class="v">40%</td><td class="v">10%</td><td class="v">0%</td><td class="v">0%</td></tr>
+</tbody></table></div>
+<p>推力 0.7 以下全部撐住；推到 1.0（訓練外力範圍的上限，且這裡是瞬間施加）時，25 Hz 的 LQI 也只剩 40%，E5 只剩 0–10%，失敗都是滑車撞到 15 cm 軟限。被推 0.7 rad/s 後，E5 滑車最遠跑到 9–10 cm 再回到中心。</p>
+<h3>全開 DR 動畫抽樣（watch_07113.py，seed 20000–20004）</h3>
+<div class="scroll"><table>
+<thead><tr><th>集</th><th>抽到的條件</th><th class="v">x std</th><th class="v">θ std</th><th class="v">max|x|</th><th class="v">RMS duty</th></tr></thead>
+<tbody>
+<tr><td class="v">0</td><td>K_F 26.5（偏弱）、擺 44 g</td><td class="v">0.25 cm</td><td class="v">3.7 mrad</td><td class="v">2.5 cm</td><td class="v">0.124</td></tr>
+<tr><td class="v">1</td><td>K_F 51.8（偏強）、擺 110 g、第 13 s 外力 0.41 rad/s</td><td class="v">0.64 cm</td><td class="v">6.4 mrad</td><td class="v">2.3 cm</td><td class="v">0.201</td></tr>
+<tr><td class="v">2</td><td>擺 102 g、滑車摩擦 4.6 N</td><td class="v">0.10 cm</td><td class="v">0.9 mrad</td><td class="v">4.6 cm</td><td class="v">0.113</td></tr>
+<tr><td class="v">3</td><td>零點偏 −5.1 mrad、摩擦 1.3 N</td><td class="v">0.16 cm</td><td class="v">1.7 mrad</td><td class="v">4.1 cm</td><td class="v">0.146</td></tr>
+<tr><td class="v">4</td><td>K_F 26.0、零點偏 −6.9 mrad、第 8.9 s 外力 0.37 rad/s</td><td class="v">0.84 cm</td><td class="v">6.0 mrad</td><td class="v">3.7 cm</td><td class="v">0.215</td></tr>
+</tbody></table></div>
+<p>馬達強弱差 2 倍、擺質量差 2.5 倍、零點偏到 ±7 mrad 都能穩住，∫x 那一維有效補償了零點偏移。</p>
+
+<h2 id="s10">10. 限制與風險</h2>
+<ul>
+  <li><b>可能利用了靜摩擦。</b>E5 名目 θ std 只有 1.3 mrad，小於電位器量化刻度 1.47 mrad，滑車與擺桿幾乎完全靜止。在模擬中，樞軸摩擦 3e-4 N·m 能「卡住」約 ±2.5 mrad 的擺角。實機摩擦與模型不同，<b>上機預期應看全開 DR 的數字（x 0.58 cm、θ 4.0 mrad）</b>，不是名目的。</li>
+  <li><b>大推力較脆弱。</b>瞬間推 1.0 rad/s 時 E5 幾乎都撐不住，比 LQI 與 E2 差。若實機會遇到碰撞，需要另外加強。</li>
+  <li><b>25 Hz 本身讓控制上限變差。</b>25 Hz LQI 的 x std（1.88 cm）比 50 Hz LQI（1.24 cm）大。E5 即使對 50 Hz LQI 也勝出，但 E2 對 50 Hz LQI 是 2.2 倍。</li>
+  <li><b>樣本數。</b>每組 3 個 seed，標準差是用 3 個值估的；E5 / E6 是看完第一輪後追加的設定，屬於事後選擇，正式定案前可以再跑 2 個 seed 確認。</li>
+  <li><b>沒有測的組合。</b>E3 / E4 疊在 50 Hz 的 E1 上；「25 Hz + CAPS（無 asym）」沒有測。OU 探索雜訊（<code>--noise-type ou</code>）也沒有測。</li>
+  <li><b>全部是模擬。</b>所有機台參數都還是推估值（見第 8 節），DR 範圍放寬來涵蓋誤差。</li>
+</ul>
+
+<h2 id="s11">11. 下一步</h2>
+<ol>
+  <li><b>到貨量測</b>：依第 8 節的順序，優先量 pulley_r、τ<sub>mech</sub>（階躍響應）、Fc_cart、通訊延遲分佈。τ<sub>mech</sub> 若明顯不是 80 ms，要重新檢查 25 Hz 是否仍是好的選擇。</li>
+  <li><b>用實測值收斂 DR 後重訓 E5</b>，並把控制週期 40 ms 寫進 MCU / PC 程式。</li>
+  <li><b>強化大推力</b>：可試把外力的 Δθ̇ 上限提高到 1.5、或提高外力機率，再比較推力測試。</li>
+  <li><b>上機前</b>：用 <code>watch_07113.py</code> 的 actor.pt 推論路徑寫上機程式，先用名目模型離線比對觀測組裝是否一致；上機時準備 25 Hz LQI 作為備援。</li>
+</ol>
+
+<h2 id="s12">12. 檔案與重現</h2>
+<div class="scroll"><table>
+<thead><tr><th>檔案</th><th>內容</th></tr></thead>
+<tbody>
+<tr><td class="tag">experiments/machine/07113trytrain_mujoco_td3.py</td><td>訓練腳本（全部改動皆為命令列參數）</td></tr>
+<tr><td class="tag">experiments/machine/07113_run_all.py</td><td>依代號 E0–E6 組參數、平行執行；<code>--dry-run</code> 只列印指令</td></tr>
+<tr><td class="tag">experiments/machine/07113_aggregate.py</td><td>彙整多 seed 結果 → <code>output/results/07113_summary.md</code></td></tr>
+<tr><td class="tag">experiments/evaluation/watch_07113.py</td><td>用 actor.pt 在 MuJoCo 播放 / 錄 gif；預設全開 DR，<code>--nominal</code> 關閉</td></tr>
+<tr><td class="tag">output/models/07113_{tag}_{hz}hz_s{seed}.zip / _best.zip</td><td>final / best 模型（27 組）</td></tr>
+<tr><td class="tag">output/models/07113_*_actor.pt / _config.json</td><td>上機用 actor 權重、builder 常數、timing、DR、LQI 增益</td></tr>
+<tr><td class="tag">output/results/07113_*_final_eval.json</td><td>每次訓練的最終評估：全部參數、摘要、每集原始 metrics 與抽到的 DR 參數</td></tr>
+<tr><td class="tag">output/logs/07113/*.log</td><td>各訓練程序的完整 stdout</td></tr>
+<tr><td class="tag">tensorboard_logs/machine/07113_*</td><td>TensorBoard（含 time/sim_seconds，可依模擬時間比較）</td></tr>
+<tr><td class="tag">output/07113_E5_demo.gif</td><td>E5 名目模型、第 8 秒推 0.7 rad/s 的動畫</td></tr>
+</tbody></table></div>
+<pre><code>cd rl_project
+python experiments/machine/07113_run_all.py --jobs 7                    # 第一輪 E0–E4（21 次）
+python experiments/machine/07113_run_all.py --only E5 E6 --jobs 6       # 第二輪
+python experiments/machine/07113_aggregate.py                           # 彙整
+python experiments/evaluation/watch_07113.py                            # 看 E5 動畫（全開 DR）</code></pre>
+<p class="note">⚠️ macOS 閒置 1 分鐘就會睡眠，長時間訓練請用 <code>caffeinate -i -s</code> 包住並保持螢幕打開；第一輪曾因此暫停約 30 分鐘。</p>
+
+<footer>資料來源：output/results/07113_*_final_eval.json（最終評估，每組 3 seed × 50 集 × 名目 / 全開 DR）、TensorBoard event file（訓練中評估）、07113_E5_25hz_s1_config.json、推力測試與 watch_07113.py 的執行輸出。</footer>
+</div>
+
+<script>
+const D = {"final":{"E0":{"hz":50,"algo":"TD3","seeds":[0,1,2],"args":{"explore_sigma":0.2,"explore_sigma_final":0.05,"noise_type":"normal","target_noise":0.2,"target_noise_clip":0.5,"caps_lambda_t":0.0,"caps_lambda_s":0.0,"asym_critic":false,"ctrl_hz":50,"preset":"07112"},"rl_final_nominal":{"return_mean":[2453.1066669183424,2773.500732589893,2702.528172365298],"full_length_frac":[0.9,0.74,0.98],"osc_x_std_tail":[0.07743584229172608,0.06444406139042487,0.08029933220393014],"osc_theta_std_tail":[0.015255831863644511,0.01603316488514549,0.016198027538860352],"osc_theta_zc_hz_tail":[1.172357147185111,0.9615153276087292,0.8107368421052632],"max_cart_pos_abs":[0.1267503108370458,0.13286946486973372,0.12592484738157364],"RMS_Control_Effort":[0.34968828700493665,0.2881875835840137,0.29471400482332943],"Duty_Saturation_frac":[0.035048775410481035,0.020293724675719237,0.012216205533596838],"rail_limit_hit":[0.1,0.26,0.02],"angle_limit_hit":[0.0,0.0,0.0],"osc_x_mean_abs_tail":[0.004158995294070941,0.01791462331997748,0.007639604221648455]},"rl_final_dr":{"return_mean":[1991.5034206758337,1740.7668327350943,2137.8151360854913],"full_length_frac":[0.74,0.42,0.7],"osc_x_std_tail":[0.07276290561247924,0.07028408896685612,0.06583756904025649],"osc_theta_std_tail":[0.016413254996590063,0.016167192157792016,0.015493565281882121],"osc_theta_zc_hz_tail":[1.3822849159795403,1.2524608114849294,1.4647359892890028],"max_cart_pos_abs":[0.13215424103289994,0.1390683610105833,0.13412419932674013],"RMS_Control_Effort":[0.39150485112860606,0.3740969539296532,0.3581818674778338],"Duty_Saturation_frac":[0.048916553617423,0.03969572056511736,0.031015426590330474],"rail_limit_hit":[0.2,0.58,0.3],"angle_limit_hit":[0.06,0.0,0.0],"osc_x_mean_abs_tail":[0.018487566477157765,0.027856675887523167,0.028618261115284125]},"rl_best_nominal":{"return_mean":[3194.447655815378,2957.4900887390704,2901.969939812826],"full_length_frac":[1.0,0.78,0.98],"osc_x_std_tail":[0.05551977899637614,0.06361736349357844,0.06767009787853773],"osc_theta_std_tail":[0.017736168198270424,0.015492744680845954,0.014753061436322368],"osc_theta_zc_hz_tail":[0.8440000000000001,1.0243727767923345,1.4883125000000001],"max_cart_pos_abs":[0.10299580512035829,0.13187230145045636,0.13544137458802344],"RMS_Control_Effort":[0.31409652611813943,0.2853072164912399,0.27053570017275996],"Duty_Saturation_frac":[0.026239999999999996,0.01976955638800329,0.0026425000000000003],"rail_limit_hit":[0.0,0.22,0.02],"angle_limit_hit":[0.0,0.0,0.0],"osc_x_mean_abs_tail":[0.009735467143381582,0.013957970053125218,0.008198063451650937]},"rl_best_dr":{"return_mean":[2645.7763000983505,1824.0341245774443,2057.098035559766],"full_length_frac":[0.98,0.42,0.76],"osc_x_std_tail":[0.04730647759379083,0.07095824777464904,0.07343329654138014],"osc_theta_std_tail":[0.017202086324361824,0.01601636994821026,0.020070924525014622],"osc_theta_zc_hz_tail":[1.1452992700729925,1.4303389782357936,1.24048792113535],"max_cart_pos_abs":[0.117043946016241,0.14213553809461096,0.13889362132435948],"RMS_Control_Effort":[0.3541875073359308,0.37298744362261826,0.3737063675226239],"Duty_Saturation_frac":[0.036838021978021974,0.04011068908163099,0.01720401978058727],"rail_limit_hit":[0.02,0.58,0.24],"angle_limit_hit":[0.0,0.0,0.02],"osc_x_mean_abs_tail":[0.032481518661343974,0.029712656306040183,0.009898832631512094]},"lqi_nominal":{"return_mean":[5314.456955165437,5314.456955165437,5314.456955165437],"full_length_frac":[1.0,1.0,1.0],"osc_x_std_tail":[0.012429687366188871,0.012429687366188871,0.012429687366188871],"osc_theta_std_tail":[0.008535576748481358,0.008535576748481358,0.008535576748481358],"osc_theta_zc_hz_tail":[0.447,0.447,0.447],"max_cart_pos_abs":[0.035163745789635346,0.035163745789635346,0.035163745789635346],"RMS_Control_Effort":[0.13218832950218387,0.13218832950218387,0.13218832950218387],"Duty_Saturation_frac":[0.00024,0.00024,0.00024],"rail_limit_hit":[0.0,0.0,0.0],"angle_limit_hit":[0.0,0.0,0.0],"osc_x_mean_abs_tail":[0.0010054353607892095,0.0010054353607892095,0.0010054353607892095]},"lqi_dr":{"return_mean":[3704.9764943347445,3704.9764943347445,3704.9764943347445],"full_length_frac":[0.96,0.96,0.96],"osc_x_std_tail":[0.018732632779916117,0.018732632779916117,0.018732632779916117],"osc_theta_std_tail":[0.014063716779973588,0.014063716779973588,0.014063716779973588],"osc_theta_zc_hz_tail":[0.8141335098022996,0.8141335098022996,0.8141335098022996],"max_cart_pos_abs":[0.05866092381383938,0.05866092381383938,0.05866092381383938],"RMS_Control_Effort":[0.21868206317904032,0.21868206317904032,0.21868206317904032],"Duty_Saturation_frac":[0.0036919204428182755,0.0036919204428182755,0.0036919204428182755],"rail_limit_hit":[0.04,0.04,0.04],"angle_limit_hit":[0.0,0.0,0.0],"osc_x_mean_abs_tail":[0.0011671170267759936,0.0011671170267759936,0.0011671170267759936]}},"E1":{"hz":50,"algo":"TD3","seeds":[0,1,2],"args":{"explore_sigma":0.08,"explore_sigma_final":0.02,"noise_type":"normal","target_noise":0.05,"target_noise_clip":0.1,"caps_lambda_t":0.0,"caps_lambda_s":0.0,"asym_critic":false,"ctrl_hz":50,"preset":"none"},"rl_final_nominal":{"return_mean":[3032.5896591308406,3062.845050844062,2717.1635260521894],"full_length_frac":[1.0,1.0,0.8],"osc_x_std_tail":[0.06040609927446115,0.056209272627974496,0.06629538455710554],"osc_theta_std_tail":[0.013456312794823993,0.012796428525559005,0.013807070095953338],"osc_theta_zc_hz_tail":[1.16,1.1749999999999998,1.5952561603604252],"max_cart_pos_abs":[0.11954053936204179,0.1027190812394367,0.11845097699930777],"RMS_Control_Effort":[0.3055293357748273,0.27624088530195245,0.34012301425095404],"Duty_Saturation_frac":[0.027200000000000002,0.00834,0.03563699674508633],"rail_limit_hit":[0.0,0.0,0.2],"angle_limit_hit":[0.0,0.0,0.0],"osc_x_mean_abs_tail":[0.009692095960148979,0.011273288195747617,0.01678759264370122]},"rl_final_dr":{"return_mean":[2976.241280031035,1940.9248157627358,1632.4919869455928],"full_length_frac":[0.92,0.38,0.36],"osc_x_std_tail":[0.04220083170311098,0.0504950422759265,0.05391404586148907],"osc_theta_std_tail":[0.014145764311376046,0.017729205835597,0.015199049125973318],"osc_theta_zc_hz_tail":[1.175269481781493,1.4005264933676629,1.8530590061101482],"max_cart_pos_abs":[0.10735589902945061,0.12397019909501085,0.1406713721478103],"RMS_Control_Effort":[0.3277637634010152,0.3425735714377791,0.3947450075752895],"Duty_Saturation_frac":[0.03360206002750104,0.01745584294746823,0.05994181178643685],"rail_limit_hit":[0.08,0.44,0.6],"angle_limit_hit":[0.0,0.18,0.04],"osc_x_mean_abs_tail":[0.017667160835964413,0.022554557975528113,0.03896692339338965]},"rl_best_nominal":{"return_mean":[3492.494221522179,3260.8914112467623,2908.463761485035],"full_length_frac":[1.0,0.86,1.0],"osc_x_std_tail":[0.0449880063332793,0.04530100489198954,0.054294037540690156],"osc_theta_std_tail":[0.010627669686523728,0.01188557477671777,0.01493252960686688],"osc_theta_zc_hz_tail":[1.423,1.473884493135054,1.156],"max_cart_pos_abs":[0.10043011518829983,0.08492424632214471,0.11891411226173229],"RMS_Control_Effort":[0.27230971459927217,0.2574268304115077,0.32358516636471146],"Duty_Saturation_frac":[0.022039999999999997,0.007297753695661907,0.027659999999999997],"rail_limit_hit":[0.0,0.1,0.0],"angle_limit_hit":[0.0,0.04,0.0],"osc_x_mean_abs_tail":[0.012298307513238491,0.01310301398760396,0.03670683831046098]},"rl_best_dr":{"return_mean":[2498.4053650176684,2503.325909520191,1905.0885844222753],"full_length_frac":[0.86,0.6,0.4],"osc_x_std_tail":[0.04360383925118406,0.03935380571462825,0.0482910303497967],"osc_theta_std_tail":[0.016048035128338772,0.01217125323754702,0.014209177497752627],"osc_theta_zc_hz_tail":[1.3396515167328167,1.9249881590692326,1.6350249310186147],"max_cart_pos_abs":[0.10887637673032625,0.11542163485431368,0.13775371778858914],"RMS_Control_Effort":[0.3435039892293312,0.3097926179524719,0.37097282697995565],"Duty_Saturation_frac":[0.030893859766430266,0.017103867715244237,0.055793951063287654],"rail_limit_hit":[0.14,0.34,0.56],"angle_limit_hit":[0.0,0.06,0.04],"osc_x_mean_abs_tail":[0.01966550897178184,0.03255625570752438,0.05500308487567259]},"lqi_nominal":{"return_mean":[5314.456955165437,5314.456955165437,5314.456955165437],"full_length_frac":[1.0,1.0,1.0],"osc_x_std_tail":[0.012429687366188871,0.012429687366188871,0.012429687366188871],"osc_theta_std_tail":[0.008535576748481358,0.008535576748481358,0.008535576748481358],"osc_theta_zc_hz_tail":[0.447,0.447,0.447],"max_cart_pos_abs":[0.035163745789635346,0.035163745789635346,0.035163745789635346],"RMS_Control_Effort":[0.13218832950218387,0.13218832950218387,0.13218832950218387],"Duty_Saturation_frac":[0.00024,0.00024,0.00024],"rail_limit_hit":[0.0,0.0,0.0],"angle_limit_hit":[0.0,0.0,0.0],"osc_x_mean_abs_tail":[0.0010054353607892095,0.0010054353607892095,0.0010054353607892095]},"lqi_dr":{"return_mean":[3704.9764943347445,3704.9764943347445,3704.9764943347445],"full_length_frac":[0.96,0.96,0.96],"osc_x_std_tail":[0.018732632779916117,0.018732632779916117,0.018732632779916117],"osc_theta_std_tail":[0.014063716779973588,0.014063716779973588,0.014063716779973588],"osc_theta_zc_hz_tail":[0.8141335098022996,0.8141335098022996,0.8141335098022996],"max_cart_pos_abs":[0.05866092381383938,0.05866092381383938,0.05866092381383938],"RMS_Control_Effort":[0.21868206317904032,0.21868206317904032,0.21868206317904032],"Duty_Saturation_frac":[0.0036919204428182755,0.0036919204428182755,0.0036919204428182755],"rail_limit_hit":[0.04,0.04,0.04],"angle_limit_hit":[0.0,0.0,0.0],"osc_x_mean_abs_tail":[0.0011671170267759936,0.0011671170267759936,0.0011671170267759936]}},"E2":{"hz":25,"algo":"TD3","seeds":[0,1,2],"args":{"explore_sigma":0.08,"explore_sigma_final":0.02,"noise_type":"normal","target_noise":0.05,"target_noise_clip":0.1,"caps_lambda_t":0.0,"caps_lambda_s":0.0,"asym_critic":false,"ctrl_hz":25,"preset":"none"},"rl_final_nominal":{"return_mean":[2366.3641085583095,2244.055439185238,2124.0248656842714],"full_length_frac":[1.0,1.0,1.0],"osc_x_std_tail":[0.023060600506921422,0.023397648341282103,0.03546415816473352],"osc_theta_std_tail":[0.007751851756144199,0.007976961416428317,0.008852770981787342],"osc_theta_zc_hz_tail":[1.11,1.121,1.3590000000000004],"max_cart_pos_abs":[0.05568839360513867,0.057037082000112004,0.07407923343497622],"RMS_Control_Effort":[0.20178969740498848,0.22920014122868695,0.21505423091499482],"Duty_Saturation_frac":[0.00684,0.011320000000000002,0.00816],"rail_limit_hit":[0.0,0.0,0.0],"angle_limit_hit":[0.0,0.0,0.0],"osc_x_mean_abs_tail":[0.008613605422058376,0.011009739082329675,0.008424686108852658]},"rl_final_dr":{"return_mean":[2064.8720885898433,2213.082915851086,1978.716583871447],"full_length_frac":[0.94,0.94,0.92],"osc_x_std_tail":[0.025923347303183557,0.01911750797022875,0.024630610641517656],"osc_theta_std_tail":[0.00945798244776991,0.008463384097187722,0.010400612426120037],"osc_theta_zc_hz_tail":[1.067738998033488,0.9304601907906807,1.0665259920072445],"max_cart_pos_abs":[0.07262421242960439,0.06782861487496658,0.07091741080781738],"RMS_Control_Effort":[0.24192836567103287,0.23727636629047907,0.2319678876470757],"Duty_Saturation_frac":[0.02163224774232965,0.022227249376328192,0.01623363717617941],"rail_limit_hit":[0.06,0.06,0.04],"angle_limit_hit":[0.0,0.0,0.04],"osc_x_mean_abs_tail":[0.017681788358578848,0.017813643988113637,0.01701561386515906]},"rl_best_nominal":{"return_mean":[2172.5827165904593,2197.673764414957,2446.0215566040047],"full_length_frac":[1.0,1.0,1.0],"osc_x_std_tail":[0.03160273856158186,0.029908632745918363,0.03010088958263958],"osc_theta_std_tail":[0.00807367391000037,0.007304080974780335,0.006677327854978984],"osc_theta_zc_hz_tail":[1.296,0.9399999999999998,1.192],"max_cart_pos_abs":[0.06395834739080518,0.061036677721124845,0.06678674281357523],"RMS_Control_Effort":[0.20687309530595513,0.2138100163982768,0.17535165605407663],"Duty_Saturation_frac":[0.00816,0.01064,0.00232],"rail_limit_hit":[0.0,0.0,0.0],"angle_limit_hit":[0.0,0.0,0.0],"osc_x_mean_abs_tail":[0.008300120411773557,0.010544507181453933,0.00967083445988421]},"rl_best_dr":{"return_mean":[2057.458440336545,2135.1175405768918,2053.920935556098],"full_length_frac":[0.96,0.94,0.94],"osc_x_std_tail":[0.025541105975185364,0.021339244868572332,0.028801707389061074],"osc_theta_std_tail":[0.00869040363952145,0.007513723423357354,0.00996470679210947],"osc_theta_zc_hz_tail":[1.0590925925925925,0.9814694269223712,1.0164845955078512],"max_cart_pos_abs":[0.07492573433437366,0.06907792085143957,0.07487822532617308],"RMS_Control_Effort":[0.22708035175351202,0.23780209796648033,0.23279792170434205],"Duty_Saturation_frac":[0.01645960566561574,0.01869944454510656,0.015633318757039688],"rail_limit_hit":[0.04,0.06,0.06],"angle_limit_hit":[0.0,0.0,0.0],"osc_x_mean_abs_tail":[0.019956022677774722,0.016175751237089763,0.012182521068381785]},"lqi_nominal":{"return_mean":[1962.0975213115414,1962.0975213115414,1962.0975213115414],"full_length_frac":[1.0,1.0,1.0],"osc_x_std_tail":[0.018778934057373624,0.018778934057373624,0.018778934057373624],"osc_theta_std_tail":[0.01302777191958098,0.01302777191958098,0.01302777191958098],"osc_theta_zc_hz_tail":[0.44799999999999995,0.44799999999999995,0.44799999999999995],"max_cart_pos_abs":[0.039477009257465036,0.039477009257465036,0.039477009257465036],"RMS_Control_Effort":[0.14744634087783667,0.14744634087783667,0.14744634087783667],"Duty_Saturation_frac":[0.0,0.0,0.0],"rail_limit_hit":[0.0,0.0,0.0],"angle_limit_hit":[0.0,0.0,0.0],"osc_x_mean_abs_tail":[0.0015050918439030504,0.0015050918439030504,0.0015050918439030504]},"lqi_dr":{"return_mean":[1226.436452618699,1226.436452618699,1226.436452618699],"full_length_frac":[0.92,0.92,0.92],"osc_x_std_tail":[0.030873159036526602,0.030873159036526602,0.030873159036526602],"osc_theta_std_tail":[0.02315965256501587,0.02315965256501587,0.02315965256501587],"osc_theta_zc_hz_tail":[0.5730192744441617,0.5730192744441617,0.5730192744441617],"max_cart_pos_abs":[0.07105507500480623,0.07105507500480623,0.07105507500480623],"RMS_Control_Effort":[0.2515950875035991,0.2515950875035991,0.2515950875035991],"Duty_Saturation_frac":[0.005953906442640839,0.005953906442640839,0.005953906442640839],"rail_limit_hit":[0.08,0.08,0.08],"angle_limit_hit":[0.0,0.0,0.0],"osc_x_mean_abs_tail":[0.0021530593276727437,0.0021530593276727437,0.0021530593276727437]}},"E3a":{"hz":50,"algo":"TD3CAPS","seeds":[0,1,2],"args":{"explore_sigma":0.08,"explore_sigma_final":0.02,"noise_type":"normal","target_noise":0.05,"target_noise_clip":0.1,"caps_lambda_t":0.1,"caps_lambda_s":0.1,"asym_critic":false,"ctrl_hz":50,"preset":"none"},"rl_final_nominal":{"return_mean":[2406.571312270739,2979.7681150314666,2070.542203118063],"full_length_frac":[0.98,1.0,0.88],"osc_x_std_tail":[0.05323364052653738,0.049912995062829736,0.0682432362555198],"osc_theta_std_tail":[0.023779561336104107,0.020023829127012994,0.03362812393341416],"osc_theta_zc_hz_tail":[1.3874719101123596,1.159,0.9387426535706629],"max_cart_pos_abs":[0.1255810049187011,0.10684045076277136,0.13305166215965722],"RMS_Control_Effort":[0.23163198221892484,0.21609546174799452,0.29948754769684205],"Duty_Saturation_frac":[0.0017649717514124296,0.00066,0.02228964688217589],"rail_limit_hit":[0.02,0.0,0.12],"angle_limit_hit":[0.0,0.0,0.0],"osc_x_mean_abs_tail":[0.028143957209003808,0.011090473677443652,0.01883360482598086]},"rl_final_dr":{"return_mean":[2084.322867835704,2706.690194351227,1531.630564427629],"full_length_frac":[0.52,0.74,0.38],"osc_x_std_tail":[0.05192678712535459,0.041860386821359515,0.06774366063907795],"osc_theta_std_tail":[0.0244871820181091,0.018619889368672714,0.03208577464179358],"osc_theta_zc_hz_tail":[0.8862192132223097,0.6012212228842992,0.8069091540420203],"max_cart_pos_abs":[0.13826273696147495,0.11615599689307199,0.13755968379548808],"RMS_Control_Effort":[0.27307102498034685,0.24517383630637105,0.3335385490908135],"Duty_Saturation_frac":[0.009692154193406858,0.007687047444314595,0.03196959109660289],"rail_limit_hit":[0.46,0.24,0.6],"angle_limit_hit":[0.02,0.04,0.02],"osc_x_mean_abs_tail":[0.04940135821312341,0.029134813230690115,0.0266288743624078]},"rl_best_nominal":{"return_mean":[3743.4684303379186,3691.440227072084,2321.522000087386],"full_length_frac":[1.0,1.0,0.76],"osc_x_std_tail":[0.03206427575358275,0.03813862568137512,0.05800706514077859],"osc_theta_std_tail":[0.012558395153438342,0.015861185625072497,0.026412914675179838],"osc_theta_zc_hz_tail":[0.932,1.074,1.224186645157134],"max_cart_pos_abs":[0.08341201979644658,0.0828225479233104,0.13463642230176204],"RMS_Control_Effort":[0.18289549167657676,0.1897495633319991,0.2611423055964919],"Duty_Saturation_frac":[0.00118,0.0008200000000000002,0.0014008255025380325],"rail_limit_hit":[0.0,0.0,0.24],"angle_limit_hit":[0.0,0.0,0.0],"osc_x_mean_abs_tail":[0.024586163278288168,0.009146548432137558,0.006837623339550479]},"rl_best_dr":{"return_mean":[2911.8316345055355,2618.081174385165,1517.0825026448852],"full_length_frac":[0.92,0.68,0.36],"osc_x_std_tail":[0.034185246562989595,0.04936498146762802,0.0683273676471452],"osc_theta_std_tail":[0.017917264790792687,0.02106685595404827,0.028673683081992193],"osc_theta_zc_hz_tail":[0.8929123549726447,0.6977428891290843,0.9199811635308663],"max_cart_pos_abs":[0.09943970771500804,0.1177864232441745,0.142662668467971],"RMS_Control_Effort":[0.24495192572362065,0.2566490252999122,0.324681670396283],"Duty_Saturation_frac":[0.008022437473249532,0.010379977885545342,0.010224981594174848],"rail_limit_hit":[0.06,0.32,0.64],"angle_limit_hit":[0.02,0.0,0.0],"osc_x_mean_abs_tail":[0.032149813135252454,0.022410889737346146,0.017431953036584593]},"lqi_nominal":{"return_mean":[5314.456955165437,5314.456955165437,5314.456955165437],"full_length_frac":[1.0,1.0,1.0],"osc_x_std_tail":[0.012429687366188871,0.012429687366188871,0.012429687366188871],"osc_theta_std_tail":[0.008535576748481358,0.008535576748481358,0.008535576748481358],"osc_theta_zc_hz_tail":[0.447,0.447,0.447],"max_cart_pos_abs":[0.035163745789635346,0.035163745789635346,0.035163745789635346],"RMS_Control_Effort":[0.13218832950218387,0.13218832950218387,0.13218832950218387],"Duty_Saturation_frac":[0.00024,0.00024,0.00024],"rail_limit_hit":[0.0,0.0,0.0],"angle_limit_hit":[0.0,0.0,0.0],"osc_x_mean_abs_tail":[0.0010054353607892095,0.0010054353607892095,0.0010054353607892095]},"lqi_dr":{"return_mean":[3704.9764943347445,3704.9764943347445,3704.9764943347445],"full_length_frac":[0.96,0.96,0.96],"osc_x_std_tail":[0.018732632779916117,0.018732632779916117,0.018732632779916117],"osc_theta_std_tail":[0.014063716779973588,0.014063716779973588,0.014063716779973588],"osc_theta_zc_hz_tail":[0.8141335098022996,0.8141335098022996,0.8141335098022996],"max_cart_pos_abs":[0.05866092381383938,0.05866092381383938,0.05866092381383938],"RMS_Control_Effort":[0.21868206317904032,0.21868206317904032,0.21868206317904032],"Duty_Saturation_frac":[0.0036919204428182755,0.0036919204428182755,0.0036919204428182755],"rail_limit_hit":[0.04,0.04,0.04],"angle_limit_hit":[0.0,0.0,0.0],"osc_x_mean_abs_tail":[0.0011671170267759936,0.0011671170267759936,0.0011671170267759936]}},"E3b":{"hz":50,"algo":"TD3CAPS","seeds":[0,1,2],"args":{"explore_sigma":0.08,"explore_sigma_final":0.02,"noise_type":"normal","target_noise":0.05,"target_noise_clip":0.1,"caps_lambda_t":0.3,"caps_lambda_s":0.3,"asym_critic":false,"ctrl_hz":50,"preset":"none"},"rl_final_nominal":{"return_mean":[1788.110904523033,2378.593796584652,1505.6203176810905],"full_length_frac":[0.34,1.0,0.54],"osc_x_std_tail":[0.07794191751369359,0.05091409748493472,0.06385328016176672],"osc_theta_std_tail":[0.031706738092032095,0.029570824619247645,0.028768004808168213],"osc_theta_zc_hz_tail":[0.8724032321940711,1.13,1.0370922298381486],"max_cart_pos_abs":[0.14169491916196647,0.12208711013599485,0.13344226928353142],"RMS_Control_Effort":[0.2927621142487922,0.25165880550648917,0.25849167355319547],"Duty_Saturation_frac":[0.0,2e-05,0.0],"rail_limit_hit":[0.66,0.0,0.3],"angle_limit_hit":[0.0,0.0,0.16],"osc_x_mean_abs_tail":[0.016577578104151936,0.04426959901858362,0.018898448076321846]},"rl_final_dr":{"return_mean":[928.3944137342287,1874.7102330686896,1503.8753405817035],"full_length_frac":[0.14,0.5,0.26],"osc_x_std_tail":[0.07074185082621329,0.05371789212525441,0.05905032249831663],"osc_theta_std_tail":[0.03282312890040969,0.030920103183008862,0.029182404396634117],"osc_theta_zc_hz_tail":[0.7040804002943599,0.8700556641240964,0.6928963717696767],"max_cart_pos_abs":[0.14686392100056542,0.12782195390948864,0.13066810323496003],"RMS_Control_Effort":[0.33922283766725925,0.3062756904585399,0.29165418851857416],"Duty_Saturation_frac":[0.000608891279894361,0.007179912855610554,0.005071352760526184],"rail_limit_hit":[0.84,0.48,0.54],"angle_limit_hit":[0.02,0.04,0.2],"osc_x_mean_abs_tail":[0.03471097994213325,0.03320019005254399,0.033683998402642606]},"rl_best_nominal":{"return_mean":[2330.8593334564225,2528.8388913906765,1511.0956333824956],"full_length_frac":[0.94,1.0,0.58],"osc_x_std_tail":[0.05540577603617456,0.050846138294148975,0.06494822827608204],"osc_theta_std_tail":[0.02759315731103442,0.031437244480290435,0.02875582187754035],"osc_theta_zc_hz_tail":[0.9103613103191267,0.9450000000000002,1.041770289782691],"max_cart_pos_abs":[0.11572276132275483,0.10587135625355826,0.13600652429767038],"RMS_Control_Effort":[0.2462616812333933,0.2594371322912725,0.26568521219170743],"Duty_Saturation_frac":[0.0002,0.0001,0.0],"rail_limit_hit":[0.06,0.0,0.36],"angle_limit_hit":[0.0,0.0,0.06],"osc_x_mean_abs_tail":[0.01064139033726135,0.00921655557639175,0.01610360970486863]},"rl_best_dr":{"return_mean":[1733.3515791890259,1818.8471344495947,1644.9031770855458],"full_length_frac":[0.54,0.6,0.26],"osc_x_std_tail":[0.06157927756797307,0.05897837807997635,0.05370161705189066],"osc_theta_std_tail":[0.036777154906421125,0.03675951450416105,0.026002221812161684],"osc_theta_zc_hz_tail":[0.7501010774816003,0.8183001266359511,0.6127104154050284],"max_cart_pos_abs":[0.13206715167863994,0.1341477307718695,0.12874814397955064],"RMS_Control_Effort":[0.3339399564428847,0.34493138811227175,0.27620593392088066],"Duty_Saturation_frac":[0.006952518831969002,0.009980904395100165,0.0047531416278123115],"rail_limit_hit":[0.38,0.38,0.54],"angle_limit_hit":[0.08,0.02,0.2],"osc_x_mean_abs_tail":[0.03314456011227411,0.03059024225325751,0.0378089691933557]},"lqi_nominal":{"return_mean":[5314.456955165437,5314.456955165437,5314.456955165437],"full_length_frac":[1.0,1.0,1.0],"osc_x_std_tail":[0.012429687366188871,0.012429687366188871,0.012429687366188871],"osc_theta_std_tail":[0.008535576748481358,0.008535576748481358,0.008535576748481358],"osc_theta_zc_hz_tail":[0.447,0.447,0.447],"max_cart_pos_abs":[0.035163745789635346,0.035163745789635346,0.035163745789635346],"RMS_Control_Effort":[0.13218832950218387,0.13218832950218387,0.13218832950218387],"Duty_Saturation_frac":[0.00024,0.00024,0.00024],"rail_limit_hit":[0.0,0.0,0.0],"angle_limit_hit":[0.0,0.0,0.0],"osc_x_mean_abs_tail":[0.0010054353607892095,0.0010054353607892095,0.0010054353607892095]},"lqi_dr":{"return_mean":[3704.9764943347445,3704.9764943347445,3704.9764943347445],"full_length_frac":[0.96,0.96,0.96],"osc_x_std_tail":[0.018732632779916117,0.018732632779916117,0.018732632779916117],"osc_theta_std_tail":[0.014063716779973588,0.014063716779973588,0.014063716779973588],"osc_theta_zc_hz_tail":[0.8141335098022996,0.8141335098022996,0.8141335098022996],"max_cart_pos_abs":[0.05866092381383938,0.05866092381383938,0.05866092381383938],"RMS_Control_Effort":[0.21868206317904032,0.21868206317904032,0.21868206317904032],"Duty_Saturation_frac":[0.0036919204428182755,0.0036919204428182755,0.0036919204428182755],"rail_limit_hit":[0.04,0.04,0.04],"angle_limit_hit":[0.0,0.0,0.0],"osc_x_mean_abs_tail":[0.0011671170267759936,0.0011671170267759936,0.0011671170267759936]}},"E3c":{"hz":50,"algo":"TD3CAPS","seeds":[0,1,2],"args":{"explore_sigma":0.08,"explore_sigma_final":0.02,"noise_type":"normal","target_noise":0.05,"target_noise_clip":0.1,"caps_lambda_t":1.0,"caps_lambda_s":1.0,"asym_critic":false,"ctrl_hz":50,"preset":"none"},"rl_final_nominal":{"return_mean":[940.993897335374,401.1392494912283,897.863161484142],"full_length_frac":[0.04,0.02,0.02],"osc_x_std_tail":[0.061501194532502676,0.02696513058024259,0.05689772869748392],"osc_theta_std_tail":[0.02999890706601887,0.04232301703812364,0.03414775528472453],"osc_theta_zc_hz_tail":[0.7149818209403486,0.37633915855829253,0.6173251920284061],"max_cart_pos_abs":[0.1325406067528797,0.08702636353770188,0.12550346732006346],"RMS_Control_Effort":[0.23429785554569374,0.20855895891430482,0.22766360835542343],"Duty_Saturation_frac":[0.0,0.0,0.0],"rail_limit_hit":[0.4,0.04,0.32],"angle_limit_hit":[0.6,0.94,0.66],"osc_x_mean_abs_tail":[0.023681356445636303,0.029992270330481744,0.025943801012289696]},"rl_final_dr":{"return_mean":[252.5879553177499,327.4352392582564,536.9930484863696],"full_length_frac":[0.0,0.02,0.04],"osc_x_std_tail":[0.05071747359813025,0.0273658145164415,0.04357450774366046],"osc_theta_std_tail":[0.03115438524634785,0.031769295980762925,0.03326882793758544],"osc_theta_zc_hz_tail":[0.6640113786845947,0.4088365610911902,0.46121525830335697],"max_cart_pos_abs":[0.11820631743097545,0.07257911368536192,0.11328052205695144],"RMS_Control_Effort":[0.2863232636596564,0.24746112586330837,0.2769101604139326],"Duty_Saturation_frac":[0.0,0.0,0.0],"rail_limit_hit":[0.34,0.06,0.26],"angle_limit_hit":[0.66,0.92,0.7],"osc_x_mean_abs_tail":[0.04862650792724495,0.05039064949501784,0.03914805732408675]},"rl_best_nominal":{"return_mean":[1149.1030897843727,1243.4435577972383,569.4416115068495],"full_length_frac":[0.06,0.0,0.0],"osc_x_std_tail":[0.05477701761890771,0.04163101548172549,0.03791364560350591],"osc_theta_std_tail":[0.029869510719442906,0.03667282674699052,0.024268643064774345],"osc_theta_zc_hz_tail":[0.47450282439495406,0.3968301655128144,0.7905497846112275],"max_cart_pos_abs":[0.1131493056630193,0.1350949907224032,0.1276877390005647],"RMS_Control_Effort":[0.19385593018322428,0.24113556216363388,0.21043643317492144],"Duty_Saturation_frac":[0.0,0.0022156228270435933,0.0],"rail_limit_hit":[0.28,0.62,0.5],"angle_limit_hit":[0.66,0.42,0.5],"osc_x_mean_abs_tail":[0.0373562710926566,0.03551319487337667,0.05423980620358442]},"rl_best_dr":{"return_mean":[893.8414027882486,602.6569039891511,900.3572381613832],"full_length_frac":[0.14,0.0,0.1],"osc_x_std_tail":[0.035657360976290894,0.0491456435597091,0.03039727033070557],"osc_theta_std_tail":[0.020636951793312416,0.0351120557361225,0.021130937759402398],"osc_theta_zc_hz_tail":[0.7653808819039177,0.8973886936437343,0.43082820447062914],"max_cart_pos_abs":[0.12074399972982626,0.1443747179077121,0.11668545478863429],"RMS_Control_Effort":[0.261907463171285,0.3286540315311862,0.2646919575698837],"Duty_Saturation_frac":[0.0,0.012475111319463928,0.0],"rail_limit_hit":[0.46,0.82,0.32],"angle_limit_hit":[0.4,0.18,0.58],"osc_x_mean_abs_tail":[0.060518649414431455,0.031699585372959305,0.05101008996862403]},"lqi_nominal":{"return_mean":[5314.456955165437,5314.456955165437,5314.456955165437],"full_length_frac":[1.0,1.0,1.0],"osc_x_std_tail":[0.012429687366188871,0.012429687366188871,0.012429687366188871],"osc_theta_std_tail":[0.008535576748481358,0.008535576748481358,0.008535576748481358],"osc_theta_zc_hz_tail":[0.447,0.447,0.447],"max_cart_pos_abs":[0.035163745789635346,0.035163745789635346,0.035163745789635346],"RMS_Control_Effort":[0.13218832950218387,0.13218832950218387,0.13218832950218387],"Duty_Saturation_frac":[0.00024,0.00024,0.00024],"rail_limit_hit":[0.0,0.0,0.0],"angle_limit_hit":[0.0,0.0,0.0],"osc_x_mean_abs_tail":[0.0010054353607892095,0.0010054353607892095,0.0010054353607892095]},"lqi_dr":{"return_mean":[3704.9764943347445,3704.9764943347445,3704.9764943347445],"full_length_frac":[0.96,0.96,0.96],"osc_x_std_tail":[0.018732632779916117,0.018732632779916117,0.018732632779916117],"osc_theta_std_tail":[0.014063716779973588,0.014063716779973588,0.014063716779973588],"osc_theta_zc_hz_tail":[0.8141335098022996,0.8141335098022996,0.8141335098022996],"max_cart_pos_abs":[0.05866092381383938,0.05866092381383938,0.05866092381383938],"RMS_Control_Effort":[0.21868206317904032,0.21868206317904032,0.21868206317904032],"Duty_Saturation_frac":[0.0036919204428182755,0.0036919204428182755,0.0036919204428182755],"rail_limit_hit":[0.04,0.04,0.04],"angle_limit_hit":[0.0,0.0,0.0],"osc_x_mean_abs_tail":[0.0011671170267759936,0.0011671170267759936,0.0011671170267759936]}},"E4":{"hz":50,"algo":"TD3CAPS","seeds":[0,1,2],"args":{"explore_sigma":0.08,"explore_sigma_final":0.02,"noise_type":"normal","target_noise":0.05,"target_noise_clip":0.1,"caps_lambda_t":0.3,"caps_lambda_s":0.3,"asym_critic":true,"ctrl_hz":50,"preset":"none"},"rl_final_nominal":{"return_mean":[4679.604816558077,5589.044691019085,5237.767907093262],"full_length_frac":[0.96,1.0,0.94],"osc_x_std_tail":[0.010249283645765479,0.00575430429206888,0.008390229954402686],"osc_theta_std_tail":[0.010602118473364583,0.007397318778742169,0.006426505643176578],"osc_theta_zc_hz_tail":[0.6104166666666666,0.557,0.5691489361702128],"max_cart_pos_abs":[0.04774755081274758,0.04312019587823571,0.049402605630743314],"RMS_Control_Effort":[0.13555229180480058,0.10990338027916073,0.11281603024071023],"Duty_Saturation_frac":[0.0,0.0,0.0],"rail_limit_hit":[0.0,0.0,0.0],"angle_limit_hit":[0.04,0.0,0.06],"osc_x_mean_abs_tail":[0.003967537188258661,0.0022496133770270165,0.004917792953800499]},"rl_final_dr":{"return_mean":[2215.7078978411846,2777.1606226157874,1876.4133428117973],"full_length_frac":[0.48,0.48,0.34],"osc_x_std_tail":[0.029167058890740262,0.019232969671838022,0.027201803249688437],"osc_theta_std_tail":[0.02465905511817912,0.01584429215052301,0.021114474200159206],"osc_theta_zc_hz_tail":[0.7243824735708915,0.6570428853592788,0.835133331771871],"max_cart_pos_abs":[0.08291397873684268,0.11009127973720273,0.09639896132966573],"RMS_Control_Effort":[0.2460223323223479,0.24038352143461295,0.24515041496544285],"Duty_Saturation_frac":[0.00047337278106508875,6e-05,0.0],"rail_limit_hit":[0.1,0.36,0.08],"angle_limit_hit":[0.42,0.16,0.58],"osc_x_mean_abs_tail":[0.015598409958031786,0.01374827510621501,0.011619533098832747]},"rl_best_nominal":{"return_mean":[2508.691024365195,5433.534785162986,5824.28127117958],"full_length_frac":[0.68,1.0,1.0],"osc_x_std_tail":[0.04713662667995838,0.008695649534612554,0.009210142551902844],"osc_theta_std_tail":[0.02552545768391514,0.007075916039979523,0.007714466929866715],"osc_theta_zc_hz_tail":[1.0537381086140187,0.499,0.601],"max_cart_pos_abs":[0.13623243327344078,0.0555023606117151,0.04769707598911511],"RMS_Control_Effort":[0.21310227394815662,0.11141593702573958,0.10912278606677756],"Duty_Saturation_frac":[0.0021154744649055797,0.00020000000000000004,0.0],"rail_limit_hit":[0.32,0.0,0.0],"angle_limit_hit":[0.0,0.0,0.0],"osc_x_mean_abs_tail":[0.006380656971204372,0.013833806241270239,0.00330570510167281]},"rl_best_dr":{"return_mean":[1871.2469506267405,3288.6237471572535,2929.72526137463],"full_length_frac":[0.52,0.82,0.56],"osc_x_std_tail":[0.05490702430907797,0.01933737621714391,0.032798129935715965],"osc_theta_std_tail":[0.035305558521663685,0.017376507323708008,0.027309568836867353],"osc_theta_zc_hz_tail":[0.8395146028609082,0.8141629782152006,0.7791034439744264],"max_cart_pos_abs":[0.13614582035001893,0.09380952348805467,0.1129051339905512],"RMS_Control_Effort":[0.31597429694046913,0.21971614637185283,0.2463377551773045],"Duty_Saturation_frac":[0.023169411931234788,0.0006924340103679636,0.0014111549917312793],"rail_limit_hit":[0.46,0.14,0.34],"angle_limit_hit":[0.02,0.04,0.14],"osc_x_mean_abs_tail":[0.01560623558787877,0.03355260230425869,0.013985404748448014]},"lqi_nominal":{"return_mean":[5314.456955165437,5314.456955165437,5314.456955165437],"full_length_frac":[1.0,1.0,1.0],"osc_x_std_tail":[0.012429687366188871,0.012429687366188871,0.012429687366188871],"osc_theta_std_tail":[0.008535576748481358,0.008535576748481358,0.008535576748481358],"osc_theta_zc_hz_tail":[0.447,0.447,0.447],"max_cart_pos_abs":[0.035163745789635346,0.035163745789635346,0.035163745789635346],"RMS_Control_Effort":[0.13218832950218387,0.13218832950218387,0.13218832950218387],"Duty_Saturation_frac":[0.00024,0.00024,0.00024],"rail_limit_hit":[0.0,0.0,0.0],"angle_limit_hit":[0.0,0.0,0.0],"osc_x_mean_abs_tail":[0.0010054353607892095,0.0010054353607892095,0.0010054353607892095]},"lqi_dr":{"return_mean":[3704.9764943347445,3704.9764943347445,3704.9764943347445],"full_length_frac":[0.96,0.96,0.96],"osc_x_std_tail":[0.018732632779916117,0.018732632779916117,0.018732632779916117],"osc_theta_std_tail":[0.014063716779973588,0.014063716779973588,0.014063716779973588],"osc_theta_zc_hz_tail":[0.8141335098022996,0.8141335098022996,0.8141335098022996],"max_cart_pos_abs":[0.05866092381383938,0.05866092381383938,0.05866092381383938],"RMS_Control_Effort":[0.21868206317904032,0.21868206317904032,0.21868206317904032],"Duty_Saturation_frac":[0.0036919204428182755,0.0036919204428182755,0.0036919204428182755],"rail_limit_hit":[0.04,0.04,0.04],"angle_limit_hit":[0.0,0.0,0.0],"osc_x_mean_abs_tail":[0.0011671170267759936,0.0011671170267759936,0.0011671170267759936]}},"E5":{"hz":25,"algo":"TD3","seeds":[0,1,2],"args":{"explore_sigma":0.08,"explore_sigma_final":0.02,"noise_type":"normal","target_noise":0.05,"target_noise_clip":0.1,"caps_lambda_t":0.0,"caps_lambda_s":0.0,"asym_critic":true,"ctrl_hz":25,"preset":"none"},"rl_final_nominal":{"return_mean":[3697.977438062115,3768.388409102626,3696.470331623103],"full_length_frac":[1.0,1.0,1.0],"osc_x_std_tail":[0.0035413026803018275,0.0020523501136097623,0.0037362693594383233],"osc_theta_std_tail":[0.0014656365142836666,0.0008923770808016205,0.001686561279376885],"osc_theta_zc_hz_tail":[0.285,0.15299999999999997,0.302],"max_cart_pos_abs":[0.03263316695771151,0.032182252624131616,0.03357748092449002],"RMS_Control_Effort":[0.08715438135108443,0.084050597602437,0.08695679979184172],"Duty_Saturation_frac":[0.0027600000000000003,0.0035600000000000002,0.0027600000000000003],"rail_limit_hit":[0.0,0.0,0.0],"angle_limit_hit":[0.0,0.0,0.0],"osc_x_mean_abs_tail":[0.003439793379922315,0.00262068131355279,0.0029546835776062203]},"rl_final_dr":{"return_mean":[3195.7901076340145,3195.5461268517597,3255.5028161788546],"full_length_frac":[0.96,0.96,0.96],"osc_x_std_tail":[0.005348750017203917,0.0060720496350454714,0.005932558652217768],"osc_theta_std_tail":[0.003886534996290955,0.004160098036207034,0.0038635957160847332],"osc_theta_zc_hz_tail":[0.7794776815456362,0.6084776815456362,0.7396306394027913],"max_cart_pos_abs":[0.04903755342846844,0.048027568503132605,0.04904021061488648],"RMS_Control_Effort":[0.1591883546426231,0.15176213111199957,0.14692997780322983],"Duty_Saturation_frac":[0.010356357560568089,0.00995475016655563,0.008545339105339106],"rail_limit_hit":[0.04,0.04,0.04],"angle_limit_hit":[0.0,0.0,0.0],"osc_x_mean_abs_tail":[0.005335435209668909,0.005269192971095425,0.003520072128017025]},"rl_best_nominal":{"return_mean":[3700.2621595252876,3593.1244568203983,3723.7314985683734],"full_length_frac":[1.0,1.0,1.0],"osc_x_std_tail":[0.003835268089296377,0.0050551455842939965,0.0036145809185957906],"osc_theta_std_tail":[0.0014233055465863456,0.0020307020277751946,0.001604158010454369],"osc_theta_zc_hz_tail":[0.32899999999999996,0.491,0.278],"max_cart_pos_abs":[0.03263984307657054,0.030990955649945265,0.032997116921241645],"RMS_Control_Effort":[0.08718554702474415,0.09869339018092478,0.08355448461963734],"Duty_Saturation_frac":[0.0028400000000000005,0.0027600000000000003,0.0027600000000000003],"rail_limit_hit":[0.0,0.0,0.0],"angle_limit_hit":[0.0,0.0,0.0],"osc_x_mean_abs_tail":[0.0027926244597636096,0.003784786312923568,0.002954661446082091]},"rl_best_dr":{"return_mean":[3175.207814202552,3039.042332417629,3279.9176386586173],"full_length_frac":[0.96,0.96,0.96],"osc_x_std_tail":[0.006592621264180446,0.00792743732076696,0.005478963731540086],"osc_theta_std_tail":[0.004239225624593828,0.004415899037851926,0.003883257536226001],"osc_theta_zc_hz_tail":[0.7922233041220381,0.9450558260305095,0.7770408958130477],"max_cart_pos_abs":[0.049965546715683484,0.04812611256524112,0.04825655601971974],"RMS_Control_Effort":[0.16354348694214432,0.1654351551726654,0.14406123254195743],"Duty_Saturation_frac":[0.011567022850567155,0.009027282590826895,0.008727022850567154],"rail_limit_hit":[0.04,0.04,0.04],"angle_limit_hit":[0.0,0.0,0.0],"osc_x_mean_abs_tail":[0.00528345641139142,0.00459233378598046,0.003719598497825374]},"lqi_nominal":{"return_mean":[1962.0975213115414,1962.0975213115414,1962.0975213115414],"full_length_frac":[1.0,1.0,1.0],"osc_x_std_tail":[0.018778934057373624,0.018778934057373624,0.018778934057373624],"osc_theta_std_tail":[0.01302777191958098,0.01302777191958098,0.01302777191958098],"osc_theta_zc_hz_tail":[0.44799999999999995,0.44799999999999995,0.44799999999999995],"max_cart_pos_abs":[0.039477009257465036,0.039477009257465036,0.039477009257465036],"RMS_Control_Effort":[0.14744634087783667,0.14744634087783667,0.14744634087783667],"Duty_Saturation_frac":[0.0,0.0,0.0],"rail_limit_hit":[0.0,0.0,0.0],"angle_limit_hit":[0.0,0.0,0.0],"osc_x_mean_abs_tail":[0.0015050918439030504,0.0015050918439030504,0.0015050918439030504]},"lqi_dr":{"return_mean":[1226.436452618699,1226.436452618699,1226.436452618699],"full_length_frac":[0.92,0.92,0.92],"osc_x_std_tail":[0.030873159036526602,0.030873159036526602,0.030873159036526602],"osc_theta_std_tail":[0.02315965256501587,0.02315965256501587,0.02315965256501587],"osc_theta_zc_hz_tail":[0.5730192744441617,0.5730192744441617,0.5730192744441617],"max_cart_pos_abs":[0.07105507500480623,0.07105507500480623,0.07105507500480623],"RMS_Control_Effort":[0.2515950875035991,0.2515950875035991,0.2515950875035991],"Duty_Saturation_frac":[0.005953906442640839,0.005953906442640839,0.005953906442640839],"rail_limit_hit":[0.08,0.08,0.08],"angle_limit_hit":[0.0,0.0,0.0],"osc_x_mean_abs_tail":[0.0021530593276727437,0.0021530593276727437,0.0021530593276727437]}},"E6":{"hz":25,"algo":"TD3CAPS","seeds":[0,1,2],"args":{"explore_sigma":0.08,"explore_sigma_final":0.02,"noise_type":"normal","target_noise":0.05,"target_noise_clip":0.1,"caps_lambda_t":0.1,"caps_lambda_s":0.1,"asym_critic":true,"ctrl_hz":25,"preset":"none"},"rl_final_nominal":{"return_mean":[3292.2389709105837,3464.505879821055,3233.374448875001],"full_length_frac":[1.0,1.0,1.0],"osc_x_std_tail":[0.005405163843088729,0.003034053954001365,0.008775139406664134],"osc_theta_std_tail":[0.0031080017100132513,0.0023135000773558396,0.004517498605845533],"osc_theta_zc_hz_tail":[0.342,0.28900000000000003,0.531],"max_cart_pos_abs":[0.038401461721385456,0.037517444658335744,0.03798325730852317],"RMS_Control_Effort":[0.0788535987873436,0.07770478999944658,0.08531550792853743],"Duty_Saturation_frac":[0.00072,0.0008,0.00064],"rail_limit_hit":[0.0,0.0,0.0],"angle_limit_hit":[0.0,0.0,0.0],"osc_x_mean_abs_tail":[0.004720565008084495,0.0028261876481850655,0.0052947071004324974]},"rl_final_dr":{"return_mean":[2584.121013740974,2627.677791515319,2564.7203848559493],"full_length_frac":[0.92,0.94,0.94],"osc_x_std_tail":[0.014150182848588867,0.015426665826602263,0.012263395058102306],"osc_theta_std_tail":[0.007968936847859891,0.009417887683537634,0.007606191450770323],"osc_theta_zc_hz_tail":[0.5091839905874717,0.5935089501693275,0.6281658150766432],"max_cart_pos_abs":[0.06873566082846165,0.06608766691642778,0.07086199344372587],"RMS_Control_Effort":[0.13982898322744194,0.1497040367698715,0.14641036231545812],"Duty_Saturation_frac":[0.007013888082567327,0.007992083639630809,0.006770973313387556],"rail_limit_hit":[0.08,0.06,0.06],"angle_limit_hit":[0.0,0.0,0.0],"osc_x_mean_abs_tail":[0.012026195025767157,0.007946639742805637,0.009697089086560027]},"rl_best_nominal":{"return_mean":[2942.1797480613227,2962.8475348378706,3310.3132860458386],"full_length_frac":[1.0,1.0,1.0],"osc_x_std_tail":[0.015074672201891908,0.011727850857283227,0.008453955489683721],"osc_theta_std_tail":[0.005534700159854047,0.006448141853934002,0.00423867666125801],"osc_theta_zc_hz_tail":[0.8089999999999999,0.689,0.4379999999999999],"max_cart_pos_abs":[0.043014631313271545,0.043877580811316694,0.0381356659864449],"RMS_Control_Effort":[0.099593018102025,0.10108874995532681,0.08251859397895583],"Duty_Saturation_frac":[0.0014000000000000002,0.0014000000000000002,0.00064],"rail_limit_hit":[0.0,0.0,0.0],"angle_limit_hit":[0.0,0.0,0.0],"osc_x_mean_abs_tail":[0.00473254651331294,0.00645639422858815,0.004401583133433087]},"rl_best_dr":{"return_mean":[2324.5775246477315,2117.972642857325,2544.7914630153264],"full_length_frac":[0.92,0.92,0.94],"osc_x_std_tail":[0.023503376704316875,0.021892861741769944,0.012141789037588493],"osc_theta_std_tail":[0.012127850647879976,0.016263475591242436,0.007327974916817703],"osc_theta_zc_hz_tail":[0.8787442122891866,0.776192121658315,0.6123238416415323],"max_cart_pos_abs":[0.07094695340714115,0.0820827465072513,0.07009671545795396],"RMS_Control_Effort":[0.16453655996548872,0.20312201275503675,0.1443799889448831],"Duty_Saturation_frac":[0.008438573587357182,0.010847153228081498,0.00669541791229555],"rail_limit_hit":[0.08,0.08,0.06],"angle_limit_hit":[0.0,0.0,0.0],"osc_x_mean_abs_tail":[0.00885149372162211,0.010935291756725207,0.011095443357561281]},"lqi_nominal":{"return_mean":[1962.0975213115414,1962.0975213115414,1962.0975213115414],"full_length_frac":[1.0,1.0,1.0],"osc_x_std_tail":[0.018778934057373624,0.018778934057373624,0.018778934057373624],"osc_theta_std_tail":[0.01302777191958098,0.01302777191958098,0.01302777191958098],"osc_theta_zc_hz_tail":[0.44799999999999995,0.44799999999999995,0.44799999999999995],"max_cart_pos_abs":[0.039477009257465036,0.039477009257465036,0.039477009257465036],"RMS_Control_Effort":[0.14744634087783667,0.14744634087783667,0.14744634087783667],"Duty_Saturation_frac":[0.0,0.0,0.0],"rail_limit_hit":[0.0,0.0,0.0],"angle_limit_hit":[0.0,0.0,0.0],"osc_x_mean_abs_tail":[0.0015050918439030504,0.0015050918439030504,0.0015050918439030504]},"lqi_dr":{"return_mean":[1226.436452618699,1226.436452618699,1226.436452618699],"full_length_frac":[0.92,0.92,0.92],"osc_x_std_tail":[0.030873159036526602,0.030873159036526602,0.030873159036526602],"osc_theta_std_tail":[0.02315965256501587,0.02315965256501587,0.02315965256501587],"osc_theta_zc_hz_tail":[0.5730192744441617,0.5730192744441617,0.5730192744441617],"max_cart_pos_abs":[0.07105507500480623,0.07105507500480623,0.07105507500480623],"RMS_Control_Effort":[0.2515950875035991,0.2515950875035991,0.2515950875035991],"Duty_Saturation_frac":[0.005953906442640839,0.005953906442640839,0.005953906442640839],"rail_limit_hit":[0.08,0.08,0.08],"angle_limit_hit":[0.0,0.0,0.0],"osc_x_mean_abs_tail":[0.0021530593276727437,0.0021530593276727437,0.0021530593276727437]}}},"ratio":{"E0":[6.229910697703177,5.184688841468777,6.4602857528307345],"E1":[4.859824506831709,4.522179116175881,5.333632504502219],"E2":[1.2280037001283672,1.2459518878865716,1.8885075189242904],"E3a":[4.2827819363617365,4.01562755299885,5.490342133717254],"E3b":[6.270625737998087,4.096168792099374,5.137158987237271],"E3c":[4.947927708929969,2.1694134201309767,4.577567160076498],"E4":[0.8245809684357381,0.4629484332584011,0.675015365006341],"E5":[0.18857847146607987,0.10929002185850367,0.19896067306180576],"E6":[0.2878312382680938,0.16156688897951754,0.4672863422308329]},"curves":{"E0":{"steps":[50000,100000,150000,200000,250000,300000],"x":[6.366571908195813,6.106642633676529,6.4870475480953855,6.3826339940230055,7.300971696774165,7.310165340701739],"dr":[0.20000000794728598,0.6999999980131785,0.5666666626930237,0.7333333194255829,0.6333333303531011,0.6666666766007742]},"E1":{"steps":[50000,100000,150000,200000,250000,300000],"x":[4.89688366651535,4.699218273162842,3.485025931149721,5.025147025783857,5.07628433406353,5.964719752470652],"dr":[0.26666667064030963,0.4333333323399226,0.5333333263794581,0.6666666517655054,0.5999999890724818,0.6000000089406967]},"E2":{"steps":[50000,100000,150000,200000,250000,300000],"x":[2.8720468903581304,2.701494035621484,2.7918073038260145,3.1020984053611755,2.9653386523326235,2.849310077726841],"dr":[0.8999999761581421,0.8999999761581421,0.9666666587193807,0.9666666587193807,0.8666666547457377,0.9333333174387614]},"E3a":{"steps":[50000,100000,150000,200000,250000,300000],"x":[5.392402162154516,3.977843498190244,4.654030874371529,7.178054749965668,6.381218632062276,5.7768384615580235],"dr":[0.10000000397364299,0.43333332737286884,0.5666666825612386,0.46666667113701504,0.46666667858759564,0.6000000139077505]},"E3b":{"steps":[50000,100000,150000,200000,250000,300000],"x":[4.190284386277199,5.38224938015143,6.1120908707380295,6.927154585719109,4.996785769859949,5.701704819997152],"dr":[0.06666666766007741,0.20000000298023224,0.16666666915019354,0.033333333830038704,0.5666666626930237,0.36666666716337204]},"E3c":{"steps":[50000,100000,150000,200000,250000,300000],"x":[3.756291543443998,5.12150451540947,4.892867306868235,4.751594116290411,3.487237853308519,4.87413015216589],"dr":[0.0,0.0,0.0,0.0,0.06666666766007741,0.0]},"E4":{"steps":[50000,100000,150000,200000,250000,300000],"x":[2.9425273338953657,2.071633966018756,2.1647730842232704,1.791471615433693,1.7201053289075692,0.7849892135709524],"dr":[0.600000003973643,0.6666666666666666,0.36666666467984516,0.7666666507720947,0.46666667362054187,0.4333333373069763]},"E5":{"steps":[50000,100000,150000,200000,250000,300000],"x":[0.8101664328326782,0.6603004410862923,0.7050160473833482,0.5018097038070362,0.4345563395569722,0.3217250302744409],"dr":[0.9666666587193807,0.8999999761581421,0.9333333174387614,0.9333333174387614,0.8999999761581421,0.8999999761581421]},"E6":{"steps":[50000,100000,150000,200000,250000,300000],"x":[1.899236689011256,1.4253392815589905,1.363020638624827,1.1833091421673694,0.7915727638949951,0.47433597889418405],"dr":[0.8999999761581421,0.8999999761581421,0.8999999761581421,0.8999999761581421,0.8666666547457377,0.8666666547457377]}}};
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const ns = 'http://www.w3.org/2000/svg';
+function niceStep(raw){ const p = Math.pow(10, Math.floor(Math.log10(raw))); const f = raw / p; return (f < 1.5 ? 1 : f < 3 ? 2 : f < 7 ? 5 : 10) * p; }
+function mkSvg(W,H){ const s = document.createElementNS(ns,'svg'); s.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  s.mk = (t,a,txt) => { const e = document.createElementNS(ns,t); for (const k in a) e.setAttribute(k,a[k]); if (txt!==undefined) e.textContent = txt; s.appendChild(e); return e; }; return s; }
+const mean = a => a.reduce((x,y)=>x+y,0)/a.length;
+const sd = a => { const m = mean(a); return Math.sqrt(a.reduce((x,y)=>x+(y-m)**2,0)/(a.length-1)); };
+
+function ratioChart(){
+  const el = document.getElementById('c-ratio');
+  const tags = ['E0','E1','E2','E3a','E3b','E3c','E4','E5','E6'];
+  const W = 520, rowH = 26, m = {l:44, r:16, t:8, b:26}, H = m.t + m.b + rowH*tags.length;
+  const xmax = 7, X = v => m.l + v/xmax*(W-m.l-m.r);
+  const s = mkSvg(W,H);
+  for (let v = 0; v <= xmax; v++){ s.mk('line',{x1:X(v),x2:X(v),y1:m.t,y2:H-m.b,stroke:css('--grid')}); s.mk('text',{x:X(v),y:H-m.b+15,'text-anchor':'middle'}, v+'×'); }
+  tags.forEach((t,i) => {
+    const y = m.t + i*rowH + rowH/2, v = D.ratio[t], mu = mean(v);
+    const best = t==='E5', is25 = ['E2','E5','E6'].includes(t);
+    s.mk('text',{x:m.l-8,y:y+4,'text-anchor':'end',class:'lab','font-weight':best?700:400}, t);
+    s.mk('rect',{x:X(0),y:y-8,width:Math.max(1,X(mu)-X(0)),height:16,rx:3,fill:css(is25?'--series-3':'--series-1'),opacity:best?1:.55});
+    v.forEach(p => s.mk('circle',{cx:X(p),cy:y,r:3.2,fill:css('--panel'),stroke:css('--ink'),'stroke-width':1.3}));
+    s.mk('text',{x:X(Math.max(...v))+8,y:y+4,class:'lab'}, mu.toFixed(2)+'×');
+  });
+  s.mk('line',{x1:X(2),x2:X(2),y1:m.t,y2:H-m.b,stroke:css('--critical'),'stroke-dasharray':'5 4','stroke-width':1.5});
+  s.mk('line',{x1:X(1),x2:X(1),y1:m.t,y2:H-m.b,stroke:css('--ref'),'stroke-width':1.5});
+  el.appendChild(s);
+  const lg = document.createElement('div'); lg.className = 'legend';
+  lg.innerHTML = `<span><i style="border-color:${css('--series-1')};border-top-width:8px"></i>50 Hz</span><span><i style="border-color:${css('--series-3')};border-top-width:8px"></i>25 Hz</span><span><i class="dash" style="border-color:${css('--critical')}"></i>2 倍門檻</span><span><i style="border-color:${css('--ref')}"></i>LQI</span>`;
+  el.appendChild(lg);
+}
+
+function curveChart(){
+  const el = document.getElementById('c-curve');
+  const ser = [['E0','--series-2',false],['E1','--series-1',false],['E2','--series-3',false],['E4','--series-4',false],['E5','--series-3',true]];
+  const W = 520, H = 260, m = {l:40, r:14, t:10, b:28};
+  const xs = D.curves.E0.steps, xmax = 300000, ymax = 8;
+  const X = v => m.l + v/xmax*(W-m.l-m.r), Y = v => H-m.b - v/ymax*(H-m.t-m.b);
+  const s = mkSvg(W,H);
+  for (let v = 0; v <= ymax; v += 2){ s.mk('line',{x1:m.l,x2:W-m.r,y1:Y(v),y2:Y(v),stroke:css('--grid')}); s.mk('text',{x:m.l-6,y:Y(v)+3.5,'text-anchor':'end'}, v); }
+  for (let v = 0; v <= xmax; v += 50000) s.mk('text',{x:X(v),y:H-m.b+16,'text-anchor':'middle'}, (v/1000)+'K');
+  [[1.243,'LQI 50 Hz'],[1.878,'LQI 25 Hz']].forEach(([v,n],i) => { s.mk('line',{x1:m.l,x2:W-m.r,y1:Y(v),y2:Y(v),stroke:css(i?'--series-3':'--series-1'),'stroke-dasharray':'4 4','stroke-width':1.2}); });
+  ser.forEach(([t,c,thick]) => {
+    const d = D.curves[t].steps.map((x,i) => (i?'L':'M')+X(x).toFixed(1)+','+Y(D.curves[t].x[i]).toFixed(1)).join('');
+    s.mk('path',{d,fill:'none',stroke:css(c),'stroke-width':thick?3:1.8,'stroke-dasharray':(t==='E2')?'7 4':'none','stroke-linejoin':'round'});
+    D.curves[t].steps.forEach((x,i) => s.mk('circle',{cx:X(x),cy:Y(D.curves[t].x[i]),r:thick?4:3,fill:css(c),stroke:css('--panel'),'stroke-width':1.5}));
+  });
+  const cross = s.mk('line',{y1:m.t,y2:H-m.b,stroke:css('--muted'),visibility:'hidden'});
+  el.appendChild(s);
+  const lg = document.createElement('div'); lg.className = 'legend';
+  lg.innerHTML = ser.map(([t,c,th]) => `<span><i class="${t==='E2'?'dash':''}" style="border-color:${css(c)};border-top-width:${th?3:2}px"></i>${t}${th?'（最佳）':''}</span>`).join('') + `<span><i class="dash" style="border-color:${css('--muted')}"></i>LQI</span>`;
+  el.appendChild(lg);
+  const tip = document.createElement('div'); tip.className = 'tip'; el.appendChild(tip);
+  s.addEventListener('mousemove', e => {
+    const r = s.getBoundingClientRect(), px = (e.clientX-r.left)/r.width*W;
+    let bi = 0, bd = 1e9; xs.forEach((x,i) => { const dd = Math.abs(X(x)-px); if (dd < bd){bd = dd; bi = i;} });
+    cross.setAttribute('x1',X(xs[bi])); cross.setAttribute('x2',X(xs[bi])); cross.setAttribute('visibility','visible');
+    tip.innerHTML = `<div style="color:${css('--muted')}">${xs[bi].toLocaleString()} 步</div>` + ser.map(([t,c]) => `<div><span class="sw" style="background:${css(c)}"></span>${t}：<b>${D.curves[t].x[bi].toFixed(2)} cm</b></div>`).join('');
+    tip.style.display = 'block'; const cr = el.getBoundingClientRect(); let left = e.clientX-cr.left+12;
+    if (left + tip.offsetWidth > cr.width) left = e.clientX-cr.left-tip.offsetWidth-12;
+    tip.style.left = left+'px'; tip.style.top = (e.clientY-cr.top-10)+'px';
+  });
+  s.addEventListener('mouseleave', () => { tip.style.display = 'none'; cross.setAttribute('visibility','hidden'); });
+}
+function draw(){ document.querySelectorAll('#c-ratio svg,#c-ratio .legend,#c-curve svg,#c-curve .legend,#c-curve .tip').forEach(n => n.remove()); ratioChart(); curveChart(); }
+draw();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
+
+// tables
+const TAGS = ['E0','E1','E2','E3a','E3b','E3c','E4','E5','E6'];
+const LQI = {50:{nom:{x:0.01243,t:0.00854,r:0.1322},dr:{x:0.01874,t:0.01414,r:0.2187}}, 25:{nom:{x:0.01878,t:0.01303,r:0.1474},dr:{x:0.03087,t:0.02316,r:0.2516}}};
+const pm = (a,f) => { const v = a.filter(x => x!==null); return v.length>1 ? `${f(mean(v))} ± ${f(sd(v))}` : f(v[0]); };
+function tbl(id, key, env){
+  const cols = [['full_length_frac','跑滿',v=>(v*100).toFixed(0)+'%'],['angle_limit_hit','倒擺',v=>(v*100).toFixed(0)+'%'],['rail_limit_hit','撞軟限',v=>(v*100).toFixed(0)+'%'],
+    ['osc_x_std_tail','x std (cm)',v=>(v*100).toFixed(2)],['XR','x ÷ LQI',null],['osc_theta_std_tail','θ std (mrad)',v=>(v*1000).toFixed(1)],
+    ['osc_theta_zc_hz_tail','θ 過零 (Hz)',v=>v.toFixed(2)],['max_cart_pos_abs','max|x| (cm)',v=>(v*100).toFixed(1)],['RMS_Control_Effort','RMS duty',v=>v.toFixed(3)],['return_mean','return',v=>v.toFixed(0)]];
+  let h = '<thead><tr><th>設定</th><th class="v">Hz</th>' + cols.map(c => `<th class="v">${c[1]}</th>`).join('') + '<th>判定</th></tr></thead><tbody>';
+  for (const t of TAGS){
+    const e = D.final[t], g = e[key], hz = e.hz, l = LQI[hz][env];
+    const xr = g.osc_x_std_tail.map(v => v/l.x), xm = mean(xr);
+    const ang = mean(g.angle_limit_hit), full = mean(g.full_length_frac);
+    let badge;
+    if (env==='nom') badge = ang > 0.1 ? '<span class="badge crit">倒擺上升</span>' : xm <= 2 ? '<span class="badge good">達標</span>' : '<span class="badge crit">超過 2 倍</span>';
+    else badge = full >= 0.9 && mean(g.angle_limit_hit) <= 0.02 ? '<span class="badge good">穩健</span>' : full >= 0.6 ? '<span class="badge warn">普通</span>' : '<span class="badge crit">不耐 DR</span>';
+    const cls = t==='E5' ? 'hl' : (env==='nom' && ang > 0.1) ? 'bad' : '';
+    h += `<tr class="${cls}"><td class="tag">${t}</td><td class="v">${hz}</td>` + cols.map(c => c[0]==='XR' ? `<td class="v"><b>${pm(xr,v=>v.toFixed(2))}×</b></td>` : `<td class="v">${pm(g[c[0]],c[2])}</td>`).join('') + `<td>${badge}</td></tr>`;
+  }
+  for (const hz of [50,25]){
+    const e = D.final[hz===50?'E1':'E2'], g = e[env==='nom'?'lqi_nominal':'lqi_dr'];
+    h += `<tr><td class="tag">LQI</td><td class="v">${hz}</td>` + cols.map(c => c[0]==='XR' ? '<td class="v">1.00×</td>' : `<td class="v">${c[2](mean(g[c[0]]))}</td>`).join('') + '<td><span class="badge mut">基準</span></td></tr>';
+  }
+  document.getElementById(id).innerHTML = h + '</tbody>';
+}
+tbl('t-nom','rl_final_nominal','nom'); tbl('t-dr','rl_final_dr','dr');
+</script>
+</body>
+</html>
