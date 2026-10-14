@@ -35,7 +35,6 @@ watch_07113.py — 載入 07113 匯出的 actor.pt，在 IP570 MuJoCo 模型上�
 import argparse
 import importlib.util
 import json
-import os
 import sys
 import time
 from pathlib import Path
@@ -47,6 +46,9 @@ import torch as th
 from torch import nn
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]      # rl_project/
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+from tools.mj_viewer import ensure_mjpython, set_overlay  # noqa: E402
 TRAIN_SCRIPT = PROJECT_ROOT / "experiments" / "machine" / "07113trytrain_mujoco_td3.py"
 
 
@@ -76,19 +78,6 @@ def set_camera(cam):
     cam.distance = 0.85
     cam.azimuth = 90.0
     cam.elevation = -8.0
-
-
-def ensure_mjpython():
-    """macOS 上即時視窗需要 mjpython：不是的話，用同一個 conda 環境的 mjpython 重新執行本檔（參數不變）。"""
-    if sys.platform != "darwin" or isinstance(mujoco.viewer._MJPYTHON, mujoco.viewer._MjPythonBase):
-        return
-    mjpython = Path(sys.executable).with_name("mjpython")
-    if not mjpython.exists() or os.environ.get("WATCH_07113_REEXEC"):
-        sys.exit(f"macOS 的 MuJoCo 視窗需要 mjpython，請改用：mjpython {' '.join(sys.argv)}\n"
-                 "或加 --mode video 錄成 gif")
-    print(f"↪ 改用 {mjpython} 重新啟動（macOS 的 MuJoCo 視窗需要 mjpython）")
-    os.environ["WATCH_07113_REEXEC"] = "1"
-    os.execv(str(mjpython), [str(mjpython), str(Path(__file__).resolve()), *sys.argv[1:]])
 
 
 def main():
@@ -169,10 +158,9 @@ def main():
             if viewer is not None:
                 if not viewer.is_running():
                     return
-                viewer.set_texts((None, mujoco.mjtGridPos.mjGRID_TOPLEFT,
-                                  "Episode\nseed\ntime\ncart x\nlast push",
-                                  f"{ep + 1} / {args.episodes}\n{args.seed + ep}\n{t * timing.ctrl_dt:5.1f} s\n"
-                                  f"{env.data.qpos[0] * 100:+.1f} cm\n{last_push}"))
+                set_overlay(viewer, [("Episode", f"{ep + 1} / {args.episodes}"), ("seed", f"{args.seed + ep}"),
+                                     ("time", f"{t * timing.ctrl_dt:5.1f} s"),
+                                     ("cart x", f"{env.data.qpos[0] * 100:+.1f} cm"), ("last push", last_push)])
                 viewer.sync()
                 time.sleep(max(0.0, timing.ctrl_dt / args.speed - (time.perf_counter() - tic)))
             else:
