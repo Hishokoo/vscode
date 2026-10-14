@@ -11,11 +11,17 @@ watch_07111.py — 載入 TD3 訓練好的 .zip，觀看 / 錄製 InvertedPendul
   # 換情境：clean / realistic / full / worst
   python experiments/evaluation/watch_07111.py --scenario clean
 
+  # 只關掉隨機外力擾動，摩擦/增益誤差/零點偏移/jitter 保留
+  python experiments/evaluation/watch_07111.py --scenario realistic --no-disturbance
+
   # 錄成 mp4（需要 pip install "imageio[ffmpeg]"），預設存到 output/07111_demo.mp4
   python experiments/evaluation/watch_07111.py --mode video
 
   # 擾動測試：第 300 步給擺桿一個角速度衝擊
   python experiments/evaluation/watch_07111.py --push-step 300 --push-vel 1.5
+
+  # 週期推力：每 4 秒推一次，大小 U(0, 0.5) rad/s、方向隨機（會關閉情境內的隨機外力）
+  python experiments/evaluation/watch_07111.py --push-every 4 --push-max 0.5 --max-steps 500
 
   # 改看其他 07 系列模型
   python experiments/evaluation/watch_07111.py --model output/models/07111
@@ -43,10 +49,13 @@ AdvancedMotorWrapper = _t.AdvancedMotorWrapper
 SCENARIOS = _t.SCENARIOS
 
 
-def make_env(render_mode, max_steps, scenario):
+def make_env(render_mode, max_steps, scenario, no_disturbance=False):
     base = gym.make("InvertedPendulum-v4", render_mode=render_mode,
                     max_episode_steps=max_steps)
-    return AdvancedMotorWrapper(base, **SCENARIOS[scenario])
+    cfg = dict(SCENARIOS[scenario])
+    if no_disturbance:
+        cfg["disturbance_enable"] = False   # 只關隨機外力，摩擦/增益/bias/jitter 照情境保留
+    return AdvancedMotorWrapper(base, **cfg)
 
 
 def main():
@@ -55,12 +64,17 @@ def main():
                    help="相對於 rl_project/ 的模型路徑")
     p.add_argument("--scenario", choices=list(SCENARIOS), default="full",
                    help="full = 與 07111 訓練時相同的設定")
+    p.add_argument("--no-disturbance", action="store_true",
+                   help="關閉情境內的隨機外力擾動，其他領域隨機化保留")
     p.add_argument("--mode", choices=["human", "video"], default="human")
     p.add_argument("--episodes", type=int, default=3)
     p.add_argument("--max-steps", type=int, default=2000, help="與訓練時相同為 2000")
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--push-step", type=int, default=-1)
     p.add_argument("--push-vel", type=float, default=0.0, help="施加於擺桿角速度的增量 rad/s")
+    p.add_argument("--push-every", type=float, default=0.0,
+                   help="每隔幾秒推一次擺桿（>0 啟用；大小 U(0, --push-max)、方向隨機；會關閉情境內的隨機外力）")
+    p.add_argument("--push-max", type=float, default=0.5, help="週期推力的最大角速度增量 rad/s")
     p.add_argument("--out", default="output/07111_demo.mp4", help="相對於 rl_project/")
     p.add_argument("--plot", action="store_true", help="結束後畫出角度與動作曲線")
     args = p.parse_args()
@@ -76,13 +90,18 @@ def main():
     np.random.seed(args.seed)
 
     render_mode = "human" if args.mode == "human" else "rgb_array"
-    env = make_env(render_mode, args.max_steps, args.scenario)
+    env = make_env(render_mode, args.max_steps, args.scenario,
+                   args.no_disturbance or args.push_every > 0)
+    ctrl_dt = env.unwrapped.dt                         # InvertedPendulum-v4：0.04 s
+    push_period = int(round(args.push_every / ctrl_dt)) if args.push_every > 0 else 0
     model = TD3.load(os.path.join(_RL_PROJECT_ROOT, args.model), device="cpu")
 
     frames, logs = [], []
     for ep in range(args.episodes):
         obs, _ = env.reset(seed=args.seed + ep)
         ep_ret, t, angles, actions = 0.0, 0, [], []
+        push_rng = np.random.default_rng(args.seed + ep)      # 週期推力序列，同 seed 可重播
+        print(f"--- Episode {ep + 1} / {args.episodes}（seed {args.seed + ep}）---")
         while True:
             action, _ = model.predict(obs, deterministic=True)
 
@@ -90,6 +109,10 @@ def main():
             if t == args.push_step:
                 env.unwrapped.data.qvel[1] += args.push_vel
                 print(f"[ep {ep}] step {t}: push Δω = {args.push_vel} rad/s")
+            if push_period and t > 0 and t % push_period == 0:
+                dv = push_rng.uniform(0.0, args.push_max) * push_rng.choice([-1.0, 1.0])
+                env.unwrapped.data.qvel[1] += dv
+                print(f"   [ep {ep}] t={t * ctrl_dt:.1f}s 推擺桿 Δθ̇ = {dv:+.2f} rad/s")
 
             obs, r, term, trunc, info = env.step(action)
             ep_ret += r
