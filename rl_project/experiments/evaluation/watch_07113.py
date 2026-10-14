@@ -19,6 +19,10 @@ watch_07113.py — 載入 07113 匯出的 actor.pt，在 IP570 MuJoCo 模型上�
   # 擾動測試：第 5 秒給擺桿角速度 +1.0 rad/s
   mjpython experiments/evaluation/watch_07113.py --push-sec 5 --push-vel 1.0
 
+  # 週期推力：每 4 秒推一次，大小在 0–0.5 rad/s 之間隨機、方向隨機（此時關掉環境自帶的隨機外力，
+  # 推力只來自這裡；推力序列由 seed 決定，同 seed 可重播）
+  mjpython experiments/evaluation/watch_07113.py --push-every 4 --push-max 0.5
+
   # 錄成 gif（不需要視窗；mp4 需要 pip install "imageio[ffmpeg]"）
   python experiments/evaluation/watch_07113.py --mode video --out output/07113_E5_demo.gif
 
@@ -95,6 +99,9 @@ def main():
     p.add_argument("--seed", type=int, default=20_000, help="預設與最終評估同一組種子")
     p.add_argument("--push-sec", type=float, default=-1.0, help="第幾秒給擺桿角速度衝擊（<0 = 不推）")
     p.add_argument("--push-vel", type=float, default=0.0, help="擺桿角速度增量 rad/s")
+    p.add_argument("--push-every", type=float, default=0.0,
+                   help="每隔幾秒推一次擺桿（>0 啟用；大小 U(0, --push-max)、方向隨機；會關閉環境自帶的隨機外力）")
+    p.add_argument("--push-max", type=float, default=0.5, help="週期推力的最大角速度增量 rad/s")
     p.add_argument("--speed", type=float, default=1.0, help="播放速度倍率（human 模式）")
     p.add_argument("--out", default="output/07113_demo.gif", help="video 模式輸出，相對於 rl_project/")
     args = p.parse_args()
@@ -108,11 +115,14 @@ def main():
     m = load_train_module()
     timing = m.Timing.from_hz(hz)
     dr = not args.nominal
-    env = m.IP570Env(timing, plant_dr=dr, sensor_dr=dr, comm_dr=dr, disturbance=dr)
+    periodic = args.push_every > 0
+    env = m.IP570Env(timing, plant_dr=dr, sensor_dr=dr, comm_dr=dr, disturbance=dr and not periodic)
     mu = load_actor(model_path)
     push_step = int(round(args.push_sec / timing.ctrl_dt)) if args.push_sec >= 0 else -1
-    print(f"模型 {model_path.name}｜{hz} Hz（每步 {timing.ctrl_dt * 1000:.0f} ms）｜"
-          f"{'全開 DR（物理 / 感測 / 通訊 + 隨機外力）' if dr else '名目模型'}｜每集最多 {timing.max_episode_steps} 步")
+    push_period = int(round(args.push_every / timing.ctrl_dt)) if periodic else 0
+    dr_text = ("全開 DR（物理 / 感測 / 通訊" + ("）" if periodic else " + 隨機外力）")) if dr else "名目模型"
+    print(f"模型 {model_path.name}｜{hz} Hz（每步 {timing.ctrl_dt * 1000:.0f} ms）｜{dr_text}｜每集最多 {timing.max_episode_steps} 步"
+          + (f"｜每 {args.push_every:g} 秒推一次，|Δθ̇| ≤ {args.push_max:g} rad/s" if periodic else ""))
 
     viewer, renderer, frames = None, None, []
     if args.mode == "human":
@@ -126,6 +136,8 @@ def main():
     for ep in range(args.episodes):
         obs, _ = env.reset(seed=args.seed + ep)
         ret, t, done = 0.0, 0, False
+        push_rng = np.random.default_rng(args.seed + ep)      # 週期推力序列，同 seed 可重播
+        last_push = "—"
         if dr:
             pl, q, se, dp = env.p, env.q, env.sens, env.dist_plan
             print(f"Episode {ep} 抽到：K_F={q['K_F']:.1f} N/duty  擺 {q['m_pole'] * 1000:.0f} g  "
@@ -139,7 +151,13 @@ def main():
                 action = mu(th.as_tensor(obs[None], dtype=th.float32)).numpy()[0]
             if t == push_step:
                 env.data.qvel[1] += args.push_vel
+                last_push = f"{t * timing.ctrl_dt:.1f}s  {args.push_vel:+.2f} rad/s"
                 print(f"   [ep {ep}] t={t * timing.ctrl_dt:.1f}s 推擺桿 Δθ̇ = {args.push_vel} rad/s")
+            if push_period and t > 0 and t % push_period == 0:
+                dv = push_rng.uniform(0.0, args.push_max) * push_rng.choice([-1.0, 1.0])
+                env.data.qvel[1] += dv
+                last_push = f"{t * timing.ctrl_dt:.1f}s  {dv:+.2f} rad/s"
+                print(f"   [ep {ep}] t={t * timing.ctrl_dt:.1f}s 推擺桿 Δθ̇ = {dv:+.2f} rad/s")
             obs, r, term, trunc, info = env.step(action)
             ret += r
             t += 1
@@ -148,6 +166,10 @@ def main():
             if viewer is not None:
                 if not viewer.is_running():
                     return
+                viewer.set_texts((None, mujoco.mjtGridPos.mjGRID_TOPLEFT,
+                                  "Episode\nseed\ntime\ncart x\nlast push",
+                                  f"{ep + 1} / {args.episodes}\n{args.seed + ep}\n{t * timing.ctrl_dt:5.1f} s\n"
+                                  f"{env.data.qpos[0] * 100:+.1f} cm\n{last_push}"))
                 viewer.sync()
                 time.sleep(max(0.0, timing.ctrl_dt / args.speed - (time.perf_counter() - tic)))
             else:
