@@ -11,17 +11,20 @@ watch_07113.py — 載入 07113 匯出的 actor.pt，在 IP570 MuJoCo 模型上�
   python experiments/evaluation/watch_07113.py
   mjpython experiments/evaluation/watch_07113.py
 
-  # 預設全開 DR：物理參數、感測（零點 / 比例 / 雜訊 / 編碼器校正）、通訊（延遲 / 掉幀）隨機化 + 隨機外力，
-  # 與 07113 訓練時相同；每一集抽一組新參數，抽到的值會印出來
-  # 只看名目模型（全部關閉）：
+  # 預設：全開 DR（物理參數、感測（零點 / 比例 / 雜訊 / 編碼器校正）、通訊（延遲 / 掉幀）隨機化，
+  # 每一集抽一組新參數，抽到的值會印出來）+ 週期推力：每 4 秒推一次擺桿，大小 U(0, 0.7) rad/s、方向隨機。
+  # 週期推力開著時，環境自帶的隨機外力會關閉，推力只來自這裡；推力序列由 seed 決定，同 seed 可重播
+  # 只看名目模型（DR 與所有推力全部關閉）：
   mjpython experiments/evaluation/watch_07113.py --nominal
+
+  # 改回 07113 訓練時的隨機外力（關掉週期推力）
+  mjpython experiments/evaluation/watch_07113.py --push-every 0
 
   # 擾動測試：第 5 秒給擺桿角速度 +1.0 rad/s
   mjpython experiments/evaluation/watch_07113.py --push-sec 5 --push-vel 1.0
 
-  # 週期推力：每 4 秒推一次，大小在 0–0.5 rad/s 之間隨機、方向隨機（此時關掉環境自帶的隨機外力，
-  # 推力只來自這裡；推力序列由 seed 決定，同 seed 可重播）
-  mjpython experiments/evaluation/watch_07113.py --push-every 4 --push-max 0.5
+  # 調整週期推力：每 2 秒推一次，上限 1.0 rad/s
+  mjpython experiments/evaluation/watch_07113.py --push-every 2 --push-max 1.0
 
   # 錄成 gif（不需要視窗；mp4 需要 pip install "imageio[ffmpeg]"）
   python experiments/evaluation/watch_07113.py --mode video --out output/07113_E5_demo.gif
@@ -93,15 +96,15 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("--model", default="output/models/07113_E5_25hz_s1_actor.pt", help="相對於 rl_project/")
     p.add_argument("--nominal", action="store_true",
-                   help="關閉所有 DR 與隨機外力（預設：全開 DR，與訓練時相同）")
+                   help="關閉所有 DR、隨機外力與週期推力（預設：全開 DR + 週期推力）")
     p.add_argument("--mode", choices=["human", "video"], default="human")
     p.add_argument("--episodes", type=int, default=3)
     p.add_argument("--seed", type=int, default=20_000, help="預設與最終評估同一組種子")
     p.add_argument("--push-sec", type=float, default=-1.0, help="第幾秒給擺桿角速度衝擊（<0 = 不推）")
     p.add_argument("--push-vel", type=float, default=0.0, help="擺桿角速度增量 rad/s")
-    p.add_argument("--push-every", type=float, default=0.0,
-                   help="每隔幾秒推一次擺桿（>0 啟用；大小 U(0, --push-max)、方向隨機；會關閉環境自帶的隨機外力）")
-    p.add_argument("--push-max", type=float, default=0.5, help="週期推力的最大角速度增量 rad/s")
+    p.add_argument("--push-every", type=float, default=4.0,
+                   help="每隔幾秒推一次擺桿（大小 U(0, --push-max)、方向隨機；會關閉環境自帶的隨機外力；0 = 不推）")
+    p.add_argument("--push-max", type=float, default=0.7, help="週期推力的最大角速度增量 rad/s")
     p.add_argument("--speed", type=float, default=1.0, help="播放速度倍率（human 模式）")
     p.add_argument("--out", default="output/07113_demo.gif", help="video 模式輸出，相對於 rl_project/")
     args = p.parse_args()
@@ -115,7 +118,7 @@ def main():
     m = load_train_module()
     timing = m.Timing.from_hz(hz)
     dr = not args.nominal
-    periodic = args.push_every > 0
+    periodic = dr and args.push_every > 0
     env = m.IP570Env(timing, plant_dr=dr, sensor_dr=dr, comm_dr=dr, disturbance=dr and not periodic)
     mu = load_actor(model_path)
     push_step = int(round(args.push_sec / timing.ctrl_dt)) if args.push_sec >= 0 else -1
