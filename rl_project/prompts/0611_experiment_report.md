@@ -201,7 +201,7 @@ short_ratio 最低值：Run 1 為 25.5%，Run 2 為 25.8%，差距極小。
 | `rl_project/06111trytrain_mujoco_td3.py` | Stage 1 訓練腳本（純 delay=2） |
 | `rl_project/0611auto_optimize_loop.py` | Stage 2 optimize loop |
 | `rl_project/prompts/auto_optimize_looop.md` | Loop 策略規格文件 |
-| `rl_project/output/06111_stage1.log` | Stage 1 訓練 log |
-| `rl_project/output/0611_loop_run.log` | Stage 2 loop log（Run 2，已覆蓋 Run 1） |
+| `rl_project/output/logs/0611/06111_stage1.log` | Stage 1 訓練 log |
+| `rl_project/output/logs/0611/0611_loop_run.log` | Stage 2 loop log（Run 2，已覆蓋 Run 1） |
 | `rl_project/machinezip/06111–06120.zip` | 各輪訓練產出模型（Run 2） |
 | `rl_project/tensorboard_machine_logs/` | TensorBoard logs（Run 2） |

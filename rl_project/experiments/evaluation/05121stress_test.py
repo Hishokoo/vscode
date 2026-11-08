@@ -29,7 +29,7 @@ AdvancedMotorWrapper = _mod.AdvancedMotorWrapper
 # 路徑設定（全部相對於 rl_project 根目錄，與腳本實際所在子資料夾無關）
 # ==========================================
 LOG_DIR    = os.path.join(_RL_PROJECT_ROOT, "tensorboard_logs", "evaluation", "05121_stress_test")
-OUTPUT_DIR = os.path.join(_RL_PROJECT_ROOT, "output")
+OUTPUT_DIR = os.path.join(_RL_PROJECT_ROOT, "output", "results", "stress_test")
 MODEL_PATH = os.path.join(_RL_PROJECT_ROOT, "output", "models", "05114")
 
 os.makedirs(LOG_DIR, exist_ok=True)
